@@ -1,12 +1,9 @@
-import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { useState } from 'react';
 //import Login from '../app/Login';
-import Register from '../app/Register';
 /*
 import BottomTabs from '../screens/BottomTabs';
 import Profile from '../screens/Profile';
 */
+/*
 
 const Stack = createNativeStackNavigator();
 const AppNavigation = () => {
@@ -35,3 +32,4 @@ const AppNavigation = () => {
 }
 
 export default AppNavigation;
+*/
