@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { fetchUserProfile } from '../apis/apiGetProfileRole';
 import { login } from '../apis/apiLoginRegister';
+import { useAuth } from '../context/AuthContext';
 
 // Props del componente
 type Props = {onAuthenticate: (token: string) => void;};
@@ -15,7 +16,7 @@ export default function LoginScreen({onAuthenticate }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-
+const { setToken } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -24,10 +25,13 @@ export default function LoginScreen({onAuthenticate }: Props) {
     }
 
     try {
+       console.log("Intentando login con:", email, password); // 🔍 nuevo log
+      
       const token = await login(email, password); // usa email como username
       console.log("Token obtenido:", token);
-      await SecureStore.setItemAsync('token', token);
 
+      setToken(token); // <- AQUÍ es donde lo usas
+      await SecureStore.setItemAsync('token', token);
 
       const user = await fetchUserProfile(token);
       console.log("Usuario logueado:", user);
@@ -37,12 +41,19 @@ export default function LoginScreen({onAuthenticate }: Props) {
       if (user.role === 'alumno') {
         router.replace('/AlumnoHome');
       } else if (user.role === 'profesor') {
+        console.log("Redirigiendo a ProfesorHome");
         router.replace('/ProfesorHome');
       }
 
       // Intenta ejecutar el callback
-      onAuthenticate(token); // <- puede lanzar error si es undefined o mal implementado
+            if (onAuthenticate) {
+        onAuthenticate(token);
+      } else {
+        console.warn("onAuthenticate no está definido");
+      }
+      // <- puede lanzar error si es undefined o mal implementado
     } catch (e) {
+      console.error('Login error:', e);
       setError('Invalid credentials or server error');
     }
   };

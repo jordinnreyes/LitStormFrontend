@@ -35,12 +35,12 @@ export default function CrearQuizz({ cursoId }: { cursoId: number }) {
   const handleGenerarPreguntas = async () => {
     try {
       const data = await generarPreguntasConIA(tema, parseInt(cantidad));
-      const textos = data.map((p: any) => p.texto); // Ajusta según tu modelo
+      //const textos = data.map((p: any) => p.texto); // Ajusta según tu modelo
       //setPreguntas(textos);
       router.push({
         pathname: '/VistaPreguntas',
         params: {
-          preguntas: JSON.stringify(textos), // Lo pasamos como string
+          preguntas: JSON.stringify(data), // Lo pasamos como string
         },
       });
 

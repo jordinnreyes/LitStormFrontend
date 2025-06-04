@@ -2,7 +2,10 @@ import axios from 'axios';
 
 //const API_URL = 'http://localhost:8080';
 //const API_URL = 'http://10.100.224.45:8080';
-const API_URL = 'http://192.168.1.42:8001';
+
+//const API_URL = 'http://192.168.1.42:8001';
+const API_URL = 'http://10.100.231.62:8001';
+
 
 export const crearCurso = async (cursoData: { nombre: string; descripcion: string }, token: string) => {
   const response = await axios.post(`${API_URL}/cursos/`, cursoData, {
