@@ -1,9 +1,9 @@
 import { crearCurso, getCursos } from '@/apis/apiCursoYCodigo';
+import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, Text, TextInput } from 'react-native-paper';
-
 
 interface Curso {
   id: number;
@@ -20,6 +20,8 @@ export default function ProfesorHome() {
   const [descripcion, setDescripcion] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [cursos, setCursos] = useState<Curso[]>([]);
+
+    const router = useRouter();
 
 
   const fetchCursos = async () => {
@@ -61,10 +63,19 @@ export default function ProfesorHome() {
 
       <Text variant="titleMedium" style={{ marginTop: 20 }}>Cursos existentes:</Text>
       {cursos.map((curso) => (
-        <Card key={curso.id} style={{ marginTop: 10 }}>
+
+
+        <Card 
+          key={curso.id} 
+          style={{ marginTop: 10 }}
+          onPress={() => router.push({ pathname: '../cursoHome/[id]', params: { id: curso.id.toString() } })}
+
+          >
+
           <Card.Title title={curso.nombre} subtitle={`Código: ${curso.codigo_acceso}`} />
           <Card.Content>
             <Text>{curso.descripcion}</Text>
+            <Text style={{ color: 'blue', marginTop: 5 }}>Ver curso</Text>
           </Card.Content>
         </Card>
       ))}
