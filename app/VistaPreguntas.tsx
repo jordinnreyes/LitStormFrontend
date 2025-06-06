@@ -11,6 +11,7 @@ type Pregunta = {
   respuesta_correcta: number;
   explicacion: string;
   tema: string;
+  curso_id: number;
 };
 
 type AuthContextType = {
@@ -34,20 +35,31 @@ export default function VistaPreguntas() {
 console.log("🧪 Token actual en VistaPreguntas:", token); // 👈 log para comprobar
 
     const handleGuardarPreguntas = async () => {
-
-    if (!token) {
+  if (!token) {
     Alert.alert('Error', 'No se ha iniciado sesión. Inicia sesión para guardar las preguntas.');
     return;
-    }
-    try {
-      const response = await guardarPreguntasSeleccionadas(preguntasArray, token);
-      Alert.alert('Éxito', 'Las preguntas fueron guardadas correctamente');
-      console.log('IDs insertados:', response);
-    } catch (error: any) {
-      console.error('Error al guardar preguntas:', error);
-      Alert.alert('Error', 'No se pudieron guardar las preguntas');
-    }
-  };
+  }
+
+  // AÑADIR curso_id aquí. Por ahora lo colocamos fijo en 1, pero puedes cambiarlo dinámicamente.
+  const curso_id = 1;
+
+  // Añadimos curso_id a cada pregunta antes de enviarla
+  const preguntasConCurso = preguntasArray.map(p => ({
+    ...p,
+    curso_id,
+  }));
+
+  try {
+    console.log("📦 Enviando preguntas:", preguntasConCurso); // debug opcional
+    const response = await guardarPreguntasSeleccionadas(preguntasConCurso, token);
+    Alert.alert('Éxito', 'Las preguntas fueron guardadas correctamente');
+    console.log('IDs insertados:', response);
+  } catch (error: any) {
+    console.error('Error al guardar preguntas:', error);
+    Alert.alert('Error', 'No se pudieron guardar las preguntas');
+  }
+};
+
 
 
   return (
