@@ -1,9 +1,10 @@
-import { useLocalSearchParams } from 'expo-router';
+import axios from 'axios';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
 import { Button, Text } from 'react-native-paper';
 import { guardarPreguntasSeleccionadas } from '../apis/apiQuizz';
 import { useAuth } from '../context/AuthContext';
-
 
 type Pregunta = {
   texto: string;
@@ -21,20 +22,47 @@ type AuthContextType = {
   isLoading: boolean;
 };
 
-
 export default function VistaPreguntas() {
   const { preguntas } = useLocalSearchParams();
   const preguntasArray: Pregunta[] = Array.isArray(preguntas)
     ? preguntas
     : JSON.parse(preguntas || '[]');
 
+  // asegúrate que tienes acceso al token desde contexto
+  const { token } = useAuth(); // ya tienes acceso al token
+  const [insertedIds, setInsertedIds] = useState<string[]>([]);
 
-    // asegúrate que tienes acceso al token desde contexto
-    const { token } = useAuth(); // ya tienes acceso al token
+  const handleCrearQuiz = async () => {
+    if (!token) {
+      Alert.alert('Error', 'No se ha iniciado sesión');
+      return;
+    }
+
+    const quizData = {
+      titulo: "El mio cid",
+      tema: "Mio cid",
+      curso_id: 1,
+      fecha_inicio: new Date().toISOString(),
+      fecha_fin: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hora después
+      estado: "programado",
+      preguntas: insertedIds
+    };
+
+    try {
+      const res = await axios.post("http://192.168.100.50:8002/quizzes", quizData, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      console.log("✅ Quiz creado:", res.data);
+      Alert.alert("Éxito", "Quiz creado correctamente");
+    } catch (error) {
+      console.error('Error al guardar preguntas:', error);
+      Alert.alert('Error', 'No se pudieron guardar las preguntas');
+    }
+  };
 
 console.log("🧪 Token actual en VistaPreguntas:", token); // 👈 log para comprobar
 
-    const handleGuardarPreguntas = async () => {
+  const handleGuardarPreguntas = async () => {
   if (!token) {
     Alert.alert('Error', 'No se ha iniciado sesión. Inicia sesión para guardar las preguntas.');
     return;
@@ -54,12 +82,25 @@ console.log("🧪 Token actual en VistaPreguntas:", token); // 👈 log para com
     const response = await guardarPreguntasSeleccionadas(preguntasConCurso, token);
     Alert.alert('Éxito', 'Las preguntas fueron guardadas correctamente');
     console.log('IDs insertados:', response);
+    setInsertedIds(response as string[]);
+
+// Reenviar al formulario con los datos e IDs insertados
+router.replace({
+  pathname: '../CrearQuizz',
+  params: {
+    preguntasIds: JSON.stringify(response),
+    cursoId: "1",
+    titulo: "El mio cid",
+    tema: "Mio cid",
+    fechaInicio: new Date().toISOString(),
+    fechaFin: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+  },
+});    
   } catch (error: any) {
     console.error('Error al guardar preguntas:', error);
     Alert.alert('Error', 'No se pudieron guardar las preguntas');
   }
 };
-
 
 
   return (
