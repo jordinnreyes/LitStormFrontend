@@ -44,3 +44,49 @@ export async function obtenerPreguntasPorTemaYCurso(
   });
   return res.data;
 }
+
+export interface Quiz {
+  id: number;
+  titulo: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+}
+
+export interface Pregunta {
+  id: number;
+  contenido: string;
+  opciones: string[];
+}
+
+export interface Inscripcion {
+  id: number;
+  curso_id: number;
+  alumno_id: number;
+}
+
+export const getQuizzesByCursoId = async (cursoId: number, token: string) => {
+  const response = await axios.get<Quiz[]>(`${API_URL}/quizzes/curso/${cursoId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getPreguntasPorQuiz = async (quizId: number, token: string) => {
+  const response = await axios.get<Pregunta[]>(`${API_URL}/preguntas/por-quiz/${quizId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};
+
+export const getInscripcionesPorAlumno = async (alumnoId: number, token: string) => {
+  const response = await axios.get<Inscripcion[]>(`${API_URL}/inscripciones/alumno/${alumnoId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return response.data;
+};

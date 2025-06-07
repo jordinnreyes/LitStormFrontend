@@ -1,50 +1,66 @@
 // app/cursohome/[id].tsx
-import { getCursos } from '@/apis/apiCursoYCodigo';
-import { useLocalSearchParams } from 'expo-router';
+import { getQuizzesByCursoId } from '@/apis/apiQuizz';
+import { getTokenFromStorage } from '@/utils/auth'; // Asegúrate que tienes esta utilidad o reemplaza por tu método
+import dayjs from 'dayjs';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este componente
+import { FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 
-
-interface Curso {
+interface Quiz {
   id: number;
-  nombre: string;
-  descripcion: string;
-  profesor_id: number;
-  codigo_acceso: string;
+  titulo: string;
+  fecha_inicio: string;
+  fecha_fin: string;
 }
 
-
-export default function CursoHome() {
+export default function CursoAlumnoScreen() {
   const { id } = useLocalSearchParams();
-  const [curso, setCurso] = useState<Curso | null>(null);
-
+  const router = useRouter();
+  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
 
   useEffect(() => {
-    const fetchCurso = async () => {
-      const cursos = await getCursos();
-      const cursoSeleccionado = cursos.find((c: Curso) => c.id.toString() === id);
-      setCurso(cursoSeleccionado);
+    const fetchQuizzes = async () => {
+      const token = await getTokenFromStorage(); // asegúrate de usar tu método real
+      const allQuizzes = await getQuizzesByCursoId(Number(id), token);
+      const hoy = dayjs();
+      const activos = allQuizzes.filter((quiz: Quiz) =>
+        hoy.isAfter(dayjs(quiz.fecha_inicio)) && hoy.isBefore(dayjs(quiz.fecha_fin))
+      );
+      setQuizzes(activos);
     };
-    fetchCurso();
-  }, []);       
 
-  if (!curso) return <Text>Cargando...</Text>;
+    fetchQuizzes();
+  }, []);
+
+  const resolverQuiz = (quizId: number) => {
+    router.push(`../ResolverPreguntasScreen?id=${quizId}`);
+  };
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>{curso.nombre}</Text>
-      <Text style={styles.subtitle}>Código de acceso: {curso.codigo_acceso}</Text>
-
-      <View style={{ marginTop: 30 }}>
-        <CrearQuiz cursoId={curso.id} />
-      </View>
+      <Text style={styles.title}>Quizzes Activos</Text>
+      <FlatList
+        data={quizzes}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <View style={styles.quizCard}>
+            <Text style={styles.quizTitle}>{item.titulo}</Text>
+            <Pressable onPress={() => resolverQuiz(item.id)} style={styles.button}>
+              <Text style={styles.buttonText}>Resolver quiz</Text>
+            </Pressable>
+          </View>
+        )}
+        ListEmptyComponent={<Text>No hay quizzes activos</Text>}
+      />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  subtitle: { fontSize: 16, color: 'gray' },
+  container: { flex: 1, padding: 20, backgroundColor: '#fff' },
+  title: { fontSize: 24, fontWeight: 'bold', marginBottom: 20 },
+  quizCard: { backgroundColor: '#f0f0f0', padding: 16, marginBottom: 12, borderRadius: 8 },
+  quizTitle: { fontSize: 18, fontWeight: '600' },
+  button: { marginTop: 10, backgroundColor: '#007bff', padding: 10, borderRadius: 5 },
+  buttonText: { color: '#fff', textAlign: 'center' },
 });
