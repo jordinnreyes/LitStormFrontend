@@ -3,8 +3,8 @@ import axios from 'axios';
 //const API_URL = 'http://localhost:8080';
 //const API_URL = 'http://10.100.224.45:8080';
 
-//const API_URL = 'http://192.168.1.42:8001';
-const API_URL = 'http://192.168.100.50:8001';
+const API_URL = 'http://192.168.1.42:8001';
+//const API_URL = 'http://192.168.100.50:8001';
 
 
 export const crearCurso = async (cursoData: { nombre: string; descripcion: string }, token: string) => {
@@ -26,10 +26,18 @@ export const inscribirseCurso = async (codigo: string, token: string) => {
 };
 
 
+export interface Curso {
+  id: number;
+  nombre: string;
+  descripcion: string;
+  profesor_id: number;
+  codigo_acceso: string;
+}
 
 
 export const getCursos = async () => {
-  const response = await axios.get(`${API_URL}/cursos/`);
+  //const response = await axios.get(`${API_URL}/cursos/`);
+  const response = await axios.get<Curso[]>(`${API_URL}/cursos/`);
   return response.data;
 };
 

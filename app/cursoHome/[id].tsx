@@ -1,9 +1,9 @@
 // app/cursohome/[id].tsx
 import { getCursos } from '@/apis/apiCursoYCodigo';
+import CrearQuizz from '@/components/CrearQuizz';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este componente
 
 
 interface Curso {
@@ -24,7 +24,7 @@ export default function CursoHome() {
     const fetchCurso = async () => {
       const cursos = await getCursos();
       const cursoSeleccionado = cursos.find((c: Curso) => c.id.toString() === id);
-      setCurso(cursoSeleccionado);
+      setCurso(cursoSeleccionado || null);
     };
     fetchCurso();
   }, []);       
@@ -37,7 +37,7 @@ export default function CursoHome() {
       <Text style={styles.subtitle}>Código de acceso: {curso.codigo_acceso}</Text>
 
       <View style={{ marginTop: 30 }}>
-        <CrearQuiz cursoId={curso.id} />
+        <CrearQuizz cursoId={curso.id} />
       </View>
     </View>
   );

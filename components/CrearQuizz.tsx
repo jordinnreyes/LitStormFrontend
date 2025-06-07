@@ -5,6 +5,16 @@ import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 
+// Importamos el DateTimePicker de la librería de comunidad
+// Nota: Asegúrate de instalar @react-native-community/datetimepicker si lo necesitas 
+//npx expo install @react-native-community/datetimepicker
+
+
+import DateTimePickerModal from 'react-native-modal-datetime-picker';
+
+
+
+
 const now = new Date();
 const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
@@ -17,7 +27,7 @@ interface CrearQuizzProps {
   cursoId: number;
 }
 
-export default function CrearQuizz({ cursoId }: { cursoId: number }) {
+export default function CrearQuizz({ cursoId }: CrearQuizzProps) {
   const params = useLocalSearchParams();
 
   useEffect(() => {
@@ -35,6 +45,28 @@ export default function CrearQuizz({ cursoId }: { cursoId: number }) {
   const [fechaFin, setFechaFin] = useState(formatDate(oneHourLater));
   const [preguntas, setPreguntas] = useState<string[]>([]);
   const [mensaje, setMensaje] = useState('');
+
+
+// Estados para el DateTimePicker
+// Modal DateTimePicker
+  const [isInicioPickerVisible, setInicioPickerVisible] = useState(false);
+  const [isFinPickerVisible, setFinPickerVisible] = useState(false);
+
+  const handleConfirmInicio = (date: Date) => {
+    setFechaInicio(formatDate(date));
+    setInicioPickerVisible(false);
+  };
+
+  const handleConfirmFin = (date: Date) => {
+    setFechaFin(formatDate(date));
+    setFinPickerVisible(false);
+  };
+
+
+
+
+
+
 
   const handleGenerarPreguntas = async () => {
     try {
@@ -76,7 +108,11 @@ const handleCrearQuizz = async () => {
     console.log('Enviando quiz:', quiz);
 
     const res = await crearQuizz(quiz, token);
-    setMensaje(`Quiz creado con ID: ${res.id}`);
+    if (res && 'id' in res) {
+      setMensaje(`Quiz creado con ID: ${res.id}`);
+    } else {
+      setMensaje('Quiz creado exitosamente.');
+    }
     setTitulo('');
     setTema('');
     setCantidad('5');
@@ -93,6 +129,7 @@ const handleCrearQuizz = async () => {
     <ScrollView contentContainerStyle={styles.container}>
       <Text variant="titleLarge">Crear Quizz</Text>
 
+
       <TextInput label="Título" value={titulo} onChangeText={setTitulo} style={styles.input} />
 
       <TextInput label="Fecha Inicio (YYYY-MM-DDTHH:mm)" value={fechaInicio} onChangeText={setFechaInicio} style={styles.input} />
@@ -100,6 +137,33 @@ const handleCrearQuizz = async () => {
 
       <Button mode="contained" onPress={handleCrearQuizz}>Crear Quiz</Button>
       {mensaje ? <Text style={{ marginTop: 20 }}>{mensaje}</Text> : null}
+
+
+
+ <Button onPress={() => setInicioPickerVisible(true)} style={styles.dateButton}>
+        Elegir Fecha Inicio: {fechaInicio}
+      </Button>
+      <DateTimePickerModal
+        isVisible={isInicioPickerVisible}
+        mode="datetime"
+        date={new Date(fechaInicio)}
+        is24Hour={true}
+        onConfirm={handleConfirmInicio}
+        onCancel={() => setInicioPickerVisible(false)}
+      />
+
+      <Button onPress={() => setFinPickerVisible(true)} style={styles.dateButton}>
+        Elegir Fecha Fin: {fechaFin}
+      </Button>
+      <DateTimePickerModal
+        isVisible={isFinPickerVisible}
+        mode="datetime"
+        date={new Date(fechaFin)}
+        is24Hour={true}
+        onConfirm={handleConfirmFin}
+        onCancel={() => setFinPickerVisible(false)}
+      />
+
 
       <TextInput label="Tema" value={tema} onChangeText={setTema} style={styles.input} />
       <TextInput label="Cantidad de preguntas" value={cantidad} onChangeText={setCantidad} keyboardType="numeric" style={styles.input} />
@@ -114,11 +178,16 @@ const handleCrearQuizz = async () => {
         </>
       )}
 
+
+
+
+
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { padding: 20 },
-  input: { marginBottom: 12 }
+  input: { marginBottom: 12 },
+  dateButton: { marginVertical: 10 },
 });
