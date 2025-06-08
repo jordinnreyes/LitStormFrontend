@@ -8,6 +8,8 @@ import { Button, Text, TextInput } from 'react-native-paper';
 const now = new Date();
 const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
 
+
+//ESTE CREAR QUIZZ NO ES ES EL DE COMPONENTES
 // Formato tipo: '2025-05-27T15:00'
 function formatDate(date: Date) {
   return date.toISOString().slice(0, 16); // formato YYYY-MM-DDTHH:mm

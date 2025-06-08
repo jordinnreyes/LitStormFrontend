@@ -41,8 +41,16 @@ export const getCursos = async () => {
   return response.data;
 };
 
-export const getMisInscripciones = async (token: string) => {
-  const response = await axios.get(`${API_URL}/inscripciones/mis-inscripciones`, {
+interface Inscripcion {
+  id: number;
+  user_id: number;
+  curso_id: number;
+  curso: Curso;
+}
+
+
+export const getMisInscripciones = async (token: string): Promise<Inscripcion[]> => {
+  const response = await axios.get<Inscripcion[]>(`${API_URL}/inscripciones/mis-inscripciones`, {
     headers: { Authorization: `Bearer ${token}` }
   });
   return response.data;

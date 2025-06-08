@@ -1,10 +1,11 @@
 // app/cursohome/[id].tsx
 import { getCursos } from '@/apis/apiCursoYCodigo';
+import VerQuizzesActivos from '@/app/VerQuizzesActivos';
 import CrearQuizz from '@/components/CrearQuizz';
+import { useAuth } from '@/context/AuthContext';
 import { useLocalSearchParams } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-
 
 interface Curso {
   id: number;
@@ -18,7 +19,7 @@ interface Curso {
 export default function CursoHome() {
   const { id } = useLocalSearchParams();
   const [curso, setCurso] = useState<Curso | null>(null);
-
+  const { role } = useAuth();
 
   useEffect(() => {
     const fetchCurso = async () => {
@@ -37,7 +38,11 @@ export default function CursoHome() {
       <Text style={styles.subtitle}>Código de acceso: {curso.codigo_acceso}</Text>
 
       <View style={{ marginTop: 30 }}>
-        <CrearQuizz cursoId={curso.id} />
+        {role === 'profesor' ? (
+          <CrearQuizz cursoId={curso.id} />
+        ) : (
+          <VerQuizzesActivos cursoId={curso.id} />
+        )}
       </View>
     </View>
   );

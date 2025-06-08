@@ -16,7 +16,7 @@ export default function LoginScreen({onAuthenticate }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-const { setToken } = useAuth();
+const { setToken,setRole  } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,7 +35,7 @@ const { setToken } = useAuth();
 
       const user = await fetchUserProfile(token);
       console.log("Usuario logueado:", user);
-
+      setRole(user.role); // 👈 IMPORTANTE
 
       // Redirige según el rol
       if (user.role === 'alumno') {

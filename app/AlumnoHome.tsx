@@ -1,11 +1,11 @@
 
 // app/AlumnoHome.tsx
 import { getMisInscripciones, inscribirseCurso } from '@/apis/apiCursoYCodigo';
+import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, Text, TextInput } from 'react-native-paper';
-
 
 interface Curso {
   id: number;
@@ -30,6 +30,7 @@ export default function AlumnoHome() {
   const [codigo, setCodigo] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
+  const router = useRouter();
 
 
   const fetchInscripciones = async () => {
@@ -76,12 +77,17 @@ export default function AlumnoHome() {
 
       <Text variant="titleMedium" style={{ marginTop: 20 }}>Mis cursos:</Text>
       {inscripciones.map((ins) => (
-        <Card key={ins.id} style={{ marginTop: 10 }}>
-          <Card.Title title={ins.curso.nombre} subtitle={`Código: ${ins.curso.codigo_acceso}`} />
-          <Card.Content>
-            <Text>{ins.curso.descripcion}</Text>
-          </Card.Content>
-        </Card>
+        <Card 
+        key={ins.id} 
+        style={{ marginTop: 10 }}
+        onPress={() => router.push({ pathname: '/cursoHome/[id]', params: { id: ins.curso.id.toString() } })}
+      >
+        <Card.Title title={ins.curso.nombre} subtitle={`Código: ${ins.curso.codigo_acceso}`} />
+        <Card.Content>
+          <Text>{ins.curso.descripcion}</Text>
+          <Text style={{ color: 'blue', marginTop: 5 }}>Ver curso</Text>
+        </Card.Content>
+      </Card>
       ))}
     </ScrollView>
   );
