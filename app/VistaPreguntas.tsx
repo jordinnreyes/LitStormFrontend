@@ -1,4 +1,3 @@
-import axios from 'axios';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { Alert, ScrollView, StyleSheet, View } from 'react-native';
@@ -23,84 +22,59 @@ type AuthContextType = {
 };
 
 export default function VistaPreguntas() {
-  const { preguntas } = useLocalSearchParams();
+  const { preguntas, titulo, tema, cursoId } = useLocalSearchParams();
   const preguntasArray: Pregunta[] = Array.isArray(preguntas)
     ? preguntas
     : JSON.parse(preguntas || '[]');
+
+  // Parsear los parámetros con valores por defecto
+  const tituloQuiz = typeof titulo === 'string' ? titulo : 'Nuevo Quiz';
+  const temaQuiz = typeof tema === 'string' ? tema : 'General';
+  const cursoIdNum = typeof cursoId === 'string' ? parseInt(cursoId) : 1;
 
   // asegúrate que tienes acceso al token desde contexto
   const { token } = useAuth(); // ya tienes acceso al token
   const [insertedIds, setInsertedIds] = useState<string[]>([]);
 
-  const handleCrearQuiz = async () => {
+  console.log("🧪 Token actual en VistaPreguntas:", token); // 👈 log para comprobar
+
+  const handleGuardarPreguntas = async () => {
     if (!token) {
-      Alert.alert('Error', 'No se ha iniciado sesión');
+      Alert.alert('Error', 'No se ha iniciado sesión. Inicia sesión para guardar las preguntas.');
       return;
     }
 
-    const quizData = {
-      titulo: "El mio cid",
-      tema: "Mio cid",
-      curso_id: 1,
-      fecha_inicio: new Date().toISOString(),
-      fecha_fin: new Date(Date.now() + 60 * 60 * 1000).toISOString(), // 1 hora después
-      estado: "programado",
-      preguntas: insertedIds
-    };
+    // Usamos el cursoId que recibimos como parámetro
+    const preguntasConCurso = preguntasArray.map(p => ({
+      ...p,
+      curso_id: cursoIdNum,
+    }));
 
     try {
-      const res = await axios.post("http://192.168.100.50:8002/quizzes", quizData, {
-        headers: { Authorization: `Bearer ${token}` }
+      console.log("📦 Enviando preguntas:", preguntasConCurso); // debug opcional
+      const response = await guardarPreguntasSeleccionadas(preguntasConCurso, token);
+      Alert.alert('Éxito', 'Las preguntas fueron guardadas correctamente');
+      console.log('IDs insertados:', response);
+      setInsertedIds(response as string[]);
+
+      // Reenviar al formulario con los datos e IDs insertados
+      router.replace({
+        pathname: '../CrearQuizz',
+        params: {
+          preguntasIds: JSON.stringify(response),
+          preguntas: JSON.stringify(preguntasArray),
+          cursoId: cursoIdNum.toString(),
+          titulo: tituloQuiz,
+          tema: temaQuiz,
+          fechaInicio: new Date().toISOString(),
+          fechaFin: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+        },
       });
-      console.log("✅ Quiz creado:", res.data);
-      Alert.alert("Éxito", "Quiz creado correctamente");
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error al guardar preguntas:', error);
       Alert.alert('Error', 'No se pudieron guardar las preguntas');
     }
   };
-
-console.log("🧪 Token actual en VistaPreguntas:", token); // 👈 log para comprobar
-
-  const handleGuardarPreguntas = async () => {
-  if (!token) {
-    Alert.alert('Error', 'No se ha iniciado sesión. Inicia sesión para guardar las preguntas.');
-    return;
-  }
-
-  // AÑADIR curso_id aquí. Por ahora lo colocamos fijo en 1, pero puedes cambiarlo dinámicamente.
-  const curso_id = 1;
-
-  // Añadimos curso_id a cada pregunta antes de enviarla
-  const preguntasConCurso = preguntasArray.map(p => ({
-    ...p,
-    curso_id,
-  }));
-
-  try {
-    console.log("📦 Enviando preguntas:", preguntasConCurso); // debug opcional
-    const response = await guardarPreguntasSeleccionadas(preguntasConCurso, token);
-    Alert.alert('Éxito', 'Las preguntas fueron guardadas correctamente');
-    console.log('IDs insertados:', response);
-    setInsertedIds(response as string[]);
-
-// Reenviar al formulario con los datos e IDs insertados
-router.replace({
-  pathname: '../CrearQuizz',
-  params: {
-    preguntasIds: JSON.stringify(response),
-    cursoId: "1",
-    titulo: "El mio cid",
-    tema: "Mio cid",
-    fechaInicio: new Date().toISOString(),
-    fechaFin: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
-  },
-});    
-  } catch (error: any) {
-    console.error('Error al guardar preguntas:', error);
-    Alert.alert('Error', 'No se pudieron guardar las preguntas');
-  }
-};
 
 
   return (
@@ -145,29 +119,33 @@ const styles = StyleSheet.create({
   container: {
     padding: 20,
     paddingBottom: 40,
-    backgroundColor: '#f9f9f9',
+    minHeight: '100%',
   },
   title: {
-    marginBottom: 20,
+    marginBottom: 26,
     textAlign: 'center',
     fontWeight: 'bold',
+    fontSize: 22,
+    letterSpacing: 0.2,
   },
   card: {
-    backgroundColor: 'white',
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 20,
-    elevation: 3, // Android shadow
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 24,
+    elevation: 4, // Android shadow
     shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.15,
-    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.13,
+    shadowRadius: 8,
+    borderWidth: 1,
+    borderColor: '#ececec',
   },
   preguntaTexto: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#333',
+    fontSize: 17,
+    fontWeight: '700',
+    color: '#222',
+    marginBottom: 10,
   },
   preguntaContenido: {
     fontSize: 14,
