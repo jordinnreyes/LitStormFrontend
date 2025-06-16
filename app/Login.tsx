@@ -1,7 +1,7 @@
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
 import { Button, Text, TextInput } from 'react-native-paper';
 import { fetchUserProfile } from '../apis/apiGetProfileRole';
 import { login } from '../apis/apiLoginRegister';
@@ -17,7 +17,9 @@ export default function LoginScreen({onAuthenticate }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const router = useRouter();
-const { setToken } = useAuth();
+const { setToken ,setRole } = useAuth();
+
+const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -35,15 +37,29 @@ const { setToken } = useAuth();
       await SecureStore.setItemAsync('token', token);
 
       const user: any = await fetchUserProfile(token);
+      setRole(user.role); // 👈 Guardás el rol
+await SecureStore.setItemAsync('role', user.role); // 👈 Lo guardás también en almacenamiento segu
       console.log("Usuario logueado:", user);
+
+
+      if (user.id) {
+  await SecureStore.setItemAsync('alumnoId', user.id.toString());
+  console.log("🔐 ID de alumno guardado:", user.id);
+} else {
+  console.warn("⚠️ No se encontró el ID del usuario en el perfil.");
+}
+      // Guardar el ID del usuario en SecureStore
+      // await SecureStore.setItemAsync('userId', user.id.toString()); // <- opcional, si necesitas el ID del usuario
 
 
       // Redirige según el rol
       if (user.role === 'alumno') {
         router.replace('/AlumnoHome');
+        //router.push('/AlumnoHome');
       } else if (user.role === 'profesor') {
         console.log("Redirigiendo a ProfesorHome");
         router.replace('/ProfesorHome');
+        //router.push('/ProfesorHome');
       }
 
       // Intenta ejecutar el callback
@@ -60,7 +76,12 @@ const { setToken } = useAuth();
   };
 
   return (
-    <View style={styles.container}>
+    <KeyboardAvoidingView
+  style={{ flex: 1 }}
+  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  keyboardVerticalOffset={50} // Ajusta según si tienes barra superior
+>
+    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <Text variant="titleLarge" style={styles.title}>Iniciar sesión</Text>
       <TextInput
         label="Email"
@@ -74,18 +95,24 @@ const { setToken } = useAuth();
         label="Password"
         value={password}
         onChangeText={setPassword}
-        secureTextEntry
+        secureTextEntry={!showPassword}
         style={styles.input}
+        right={
+            <TextInput.Icon
+              icon={showPassword ? "eye-off" : "eye"}
+              onPress={() => setShowPassword(!showPassword)}  />
+          }
       />
       {error ? <Text style={styles.error}>{error}</Text> : null}
       <Button mode="contained" onPress={handleLogin}>Login</Button>
       <Button onPress={() => router.push('/Register')}>¿No tienes cuenta? Regístrate</Button>
-    </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, justifyContent: 'center', padding: 20 },
+  container: { flexGrow: 1, justifyContent: 'center', padding: 20 },
   input: { marginBottom: 12 },
   error: { color: 'red', marginBottom: 10 },
   title: { marginBottom: 20, textAlign: 'center' }

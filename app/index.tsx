@@ -2,16 +2,14 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { Image, StyleSheet, Text, TouchableOpacity } from 'react-native';
 
+
 export default function HomeScreen() {
 const router = useRouter();
+ //const { token } = useAuth();//s
 
 
-let imageSource;
-try {
-  imageSource = require('../../assets/images/home.jpg');
-} catch (error) {
-  console.error("Error cargando imagen:", error);
-}
+const imageSource = require('../assets/images/home.jpg');
+
 
   return (
     <LinearGradient

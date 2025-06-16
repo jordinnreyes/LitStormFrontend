@@ -1,12 +1,11 @@
 // src/components/QuizPlayer.tsx (ajusta la ruta si es necesario)
 
-import { obtenerPreguntasPorQuiz } from '@/apis/apiQuizz';
-import { useLocalSearchParams } from 'expo-router';
+import { obtenerPreguntasPorQuiz, obtenerRespuestasDeAlumno, verificarRespuesta } from '@/apis/apiQuizz';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, ScrollView, ActivityIndicator, TouchableOpacity } from 'react-native';
-import { Button, Text, useTheme, Card } from 'react-native-paper';
-import { useRouter } from 'expo-router';
+import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
+import { Button, Card, Text, useTheme } from 'react-native-paper';
 
 interface Pregunta {
   id: string;
@@ -28,6 +27,73 @@ export default function QuizPlayer() {
   const [error, setError] = useState<string | null>(null);
   const [respuestasUsuario, setRespuestasUsuario] = useState<{seleccionada: number, esCorrecta: boolean}[]>([]);
 
+
+const [token, setToken] = useState<string | null>(null);
+const [alumnoId, setAlumnoId] = useState<string | null>(null);
+
+useEffect(() => {
+  const checkSiYaRespondio = async () => {
+    try {
+      const storedToken = await SecureStore.getItemAsync('token');
+      const storedAlumnoId = await SecureStore.getItemAsync('alumnoId');
+
+            console.log('📦 Token recuperadoo:', storedToken);
+      console.log('📦 Alumno ID recuperadoo:', storedAlumnoId);
+
+    setToken(storedToken);
+    setAlumnoId(storedAlumnoId);
+
+
+        if (!storedToken || !storedAlumnoId) {
+      console.error("Token o alumnoId no encontrados");
+      return;
+    }
+      const result = await verificarRespuesta(quizId as string, storedAlumnoId as string);
+
+      console.log('✅ Resultado verificación:', result);
+      if (result.respondido) {
+
+console.log('🟢 Intentando obtener preguntas del quiz:', quizId, storedToken);
+    const preguntas = await obtenerPreguntasPorQuiz(quizId as string, storedToken);
+    console.log('✅ Preguntas obtenidas:', preguntas);
+
+    console.log('🟢 Intentando obtener respuestas del alumno:', quizId, storedAlumnoId);
+    const respuestas = await obtenerRespuestasDeAlumno(quizId as string, storedAlumnoId, storedToken);
+    console.log('✅ Respuestas del alumno obtenidas:', respuestas);
+
+    //setRespuestasUsuario(respuestas.preguntas); // Solo si deseas guardarlas en el estado también
+
+
+        // Redirige directamente a CorreccionQuiz
+        router.replace({
+          pathname: '/cursoalumno/CorreccionQuiz',
+          params: {
+          quizId: quizId as string,
+          alumnoId: storedAlumnoId || '',
+          token: storedToken || '',
+            // podrías pasar preguntas/respuestas guardadas si ya las tienes
+            preguntas: JSON.stringify(preguntas),
+            respuestasUsuario: JSON.stringify(respuestas.preguntas) // ✅ esto sí es correcto
+          }
+        });
+      }
+    } catch (error) {
+        if (error instanceof Error) {
+    console.error('❌ Error (tipo Error):', error.message);
+  } else {
+    console.error('❌ Error desconocido:', error);
+  }
+    }
+  };
+
+  if (quizId) checkSiYaRespondio();
+}, [quizId]);
+
+
+
+
+
+
   useEffect(() => {
     const fetchPreguntas = async () => {
       try {
@@ -37,6 +103,14 @@ export default function QuizPlayer() {
           setCargando(false);
           return;
         }
+
+
+
+        
+  const alumnoId = await SecureStore.getItemAsync('alumnoId'); // si lo guardaste así
+
+
+
         const data = await obtenerPreguntasPorQuiz(quizId as string, token);
         setPreguntas(data);
         setCargando(false);
@@ -53,17 +127,35 @@ export default function QuizPlayer() {
     setRespuestaSeleccionada(indice);
   };
 
-  const handleEnviarRespuesta = () => {
+  const handleEnviarRespuesta = async  () => {
     if (respuestaSeleccionada !== null) {
       const pregunta = preguntas[preguntaActual];
       const esCorrecta = respuestaSeleccionada === pregunta.respuesta_correcta;
-      setRespuestasUsuario(prev => [...prev, { seleccionada: respuestaSeleccionada, esCorrecta }]);
+      //setRespuestasUsuario(prev => [...prev, { seleccionada: respuestaSeleccionada, esCorrecta }]);
+const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }];
+
       if (preguntaActual < preguntas.length - 1) {
         setPreguntaActual(preguntaActual + 1);
         setRespuestaSeleccionada(null);
+
+        setRespuestasUsuario(nuevasRespuestas);
+
       } else {
+      // 🔽 Recupera el token y alumnoId directamente aquí
+      const token = await SecureStore.getItemAsync('token');
+      const alumnoId = await SecureStore.getItemAsync('alumnoId');
+      console.log("🧪 Envío final - token:", token);
+      console.log("🧪 Envío final - alumnoId:", alumnoId);
+        
         // Navegar a CorreccionQuiz pasando preguntas y respuestasUsuario
-        router.replace({ pathname: '/cursoalumno/CorreccionQuiz', params: { preguntas: JSON.stringify(preguntas), respuestasUsuario: JSON.stringify([...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }]) } });
+        router.replace({ 
+          pathname: '/cursoalumno/CorreccionQuiz', 
+          params: { preguntas: JSON.stringify(preguntas),
+             //respuestasUsuario: JSON.stringify([...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }]), 
+             respuestasUsuario: JSON.stringify(nuevasRespuestas),
+             quizId: quizId as string,
+    alumnoId: alumnoId || '',
+    token: token || '',       } });
       }
     }
   };

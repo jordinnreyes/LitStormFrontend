@@ -1,9 +1,9 @@
 // app/cursohome/[id].tsx
 import { getCursos } from '@/apis/apiCursoYCodigo';
-import { useLocalSearchParams } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useEffect, useLayoutEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este componente
+import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este screen
 
 
 interface Curso {
@@ -19,12 +19,22 @@ export default function CursoHome() {
   const { id } = useLocalSearchParams();
   const [curso, setCurso] = useState<Curso | null>(null);
 
+    const navigation = useNavigation();
+
+
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Curso', // por ejemplo agregar tu componente
+    });
+  }, [navigation]);
+
+
 
   useEffect(() => {
     const fetchCurso = async () => {
       const cursos = await getCursos();
       const cursoSeleccionado = cursos.find((c: Curso) => c.id.toString() === id);
-      setCurso(cursoSeleccionado);
+      setCurso(cursoSeleccionado || null);
     };
     fetchCurso();
   }, []);       

@@ -13,6 +13,7 @@ function formatDate(date: Date) {
   return date.toISOString().slice(0, 16);
 }
 
+
 export default function CrearQuizz() {
   const params = useLocalSearchParams();
   const [cursoId, setCursoId] = useState<number | null>(null);

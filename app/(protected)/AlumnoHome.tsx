@@ -1,9 +1,11 @@
 // app/AlumnoHome.tsx
 import { getMisInscripciones, inscribirseCurso } from '@/apis/apiCursoYCodigo';
-import { useRouter } from 'expo-router'; // 👈 NUEVO
+import TopBarUser from '@/components/TopBarUser';
+import { useFocusEffect } from '@react-navigation/native'; // 👈 NUEVO
+import { useNavigation, useRouter } from 'expo-router'; // 👈 NUEVO
 import * as SecureStore from 'expo-secure-store';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { Alert, BackHandler, ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, Text, TextInput } from 'react-native-paper';
 
 interface Curso {
@@ -25,7 +27,46 @@ export default function AlumnoHome() {
   const [codigo, setCodigo] = useState('');
   const [mensaje, setMensaje] = useState('');
   const [inscripciones, setInscripciones] = useState<Inscripcion[]>([]);
-  const router = useRouter(); // 👈 NUEVO
+  const router = useRouter(); //  NUEVO
+
+
+
+  const navigation = useNavigation();
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        Alert.alert(
+          "Confirmar salida",
+          "¿Querés cerrar sesión y salir?",
+          [
+            { text: "Cancelar", style: "cancel" },
+            { text: "Salir", onPress: () => {
+                // Opcional: limpiar token y salir app
+                SecureStore.deleteItemAsync('token');
+                BackHandler.exitApp();
+            }},
+          ]
+        );
+        return true; // Bloquea acción por defecto
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+  return () => subscription.remove();
+    }, [])
+  );
+
+
+    useLayoutEffect(() => {
+      navigation.setOptions({
+        title: 'Inicio Alumno',
+        headerRight: () => <TopBarUser />, // por ejemplo agregar tu componente
+        //headerLeft: () => null,       // <-- oculta la flecha de back
+    // o alternativamente (en RN >= 6.x)
+     headerBackVisible: false,
+      });
+    }, [navigation]);
 
   const fetchInscripciones = async () => {
     const token = await SecureStore.getItemAsync('token');
@@ -55,6 +96,8 @@ export default function AlumnoHome() {
   }, []);
 
   return (
+    <>
+
     <ScrollView contentContainerStyle={styles.container}>
       <Text variant="titleLarge">Ingresar código de curso</Text>
       <TextInput label="Código" value={codigo} onChangeText={setCodigo} style={styles.input} />
@@ -80,6 +123,7 @@ export default function AlumnoHome() {
         </Card>
       ))}
     </ScrollView>
+    </>
   );
 }
 

@@ -1,9 +1,12 @@
-import { crearCurso, getCursos } from '@/apis/apiCursoYCodigo';
-import { useRouter } from 'expo-router';
+import { crearCurso, getMisInscripciones } from '@/apis/apiCursoYCodigo';
+import TopBarUser from '@/components/TopBarUser';
+import { useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
-import { useEffect, useState } from 'react';
-import { ScrollView, StyleSheet } from 'react-native';
+import React, { useEffect, useLayoutEffect, useState } from 'react';
+import { Alert, BackHandler, ScrollView, StyleSheet } from 'react-native';
 import { Button, Card, Text, TextInput } from 'react-native-paper';
+
 
 interface Curso {
   id: number;
@@ -13,6 +16,10 @@ interface Curso {
   codigo_acceso: string;
 }
 
+export interface Inscripcion {
+  id: number;
+  curso: Curso;
+}
 
 
 export default function ProfesorHome() {
@@ -22,12 +29,53 @@ export default function ProfesorHome() {
   const [cursos, setCursos] = useState<Curso[]>([]);
 
     const router = useRouter();
+    const navigation = useNavigation();
 
 
-  const fetchCursos = async () => {
-    const data: any = await getCursos();
-    setCursos(data);
-  };
+  useLayoutEffect(() => {
+    navigation.setOptions({
+      title: 'Inicio Profesor',
+      headerRight: () => <TopBarUser />, // por ejemplo agregar tu componente
+       //headerLeft: () => null,       // <-- oculta la flecha de back
+    // o alternativamente (en RN >= 6.x)
+     headerBackVisible: false,
+    });
+  }, [navigation]);
+
+
+  
+  useFocusEffect(
+    React.useCallback(() => {
+      const onBackPress = () => {
+        Alert.alert(
+          "Confirmar salida",
+          "¿Querés cerrar sesión y salir?",
+          [
+            { text: "Cancelar", style: "cancel" },
+            { text: "Salir", onPress: () => {
+                // Opcional: limpiar token y salir app
+                SecureStore.deleteItemAsync('token');
+                BackHandler.exitApp();
+            }},
+          ]
+        );
+        return true; // Bloquea acción por defecto
+      };
+
+      const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
+
+  return () => subscription.remove();
+    }, [])
+  );
+
+ const fetchCursos = async () => {
+  const token = await SecureStore.getItemAsync('token');
+  if (!token) return;
+
+  const inscripciones = await getMisInscripciones(token);
+  const cursosDelProfesor = inscripciones.map((insc) => insc.curso);
+  setCursos(cursosDelProfesor);
+};
 
   const handleCrearCurso = async () => {
     try {
@@ -35,12 +83,13 @@ export default function ProfesorHome() {
       if (!token) throw new Error('No se encontró token');
 
       await crearCurso({ nombre, descripcion }, token);
+      //await inscribirseCurso(codigoAccesoDelCurso, token); // si puedes obtener el código
       //const curso = await crearCurso({ nombre, descripcion }, token);
       //setMensaje(`Curso creado con código: ${curso.codigo}`);
       setNombre('');
       setDescripcion('');
       fetchCursos(); // actualizar lista
-
+ 
 
     } catch (error) {
       console.error(error);
@@ -53,6 +102,8 @@ export default function ProfesorHome() {
   }, []);
 
   return (
+    <>
+
     <ScrollView contentContainerStyle={styles.container}>
       <Text variant="titleLarge">Crear Curso</Text>
       <TextInput label="Nombre" value={nombre} onChangeText={setNombre} style={styles.input} />
@@ -61,7 +112,7 @@ export default function ProfesorHome() {
       {mensaje ? <Text style={{ marginTop: 20 }}>{mensaje}</Text> : null}
 
 
-      <Text variant="titleMedium" style={{ marginTop: 20, color: 'white' }}>Cursos existentes:</Text>
+      <Text variant="titleMedium" style={{ marginTop: 30, color: 'gray' }}>Cursos existentes:</Text>
       {cursos.map((curso) => (
 
 
@@ -80,6 +131,7 @@ export default function ProfesorHome() {
         </Card>
       ))}
     </ScrollView>
+    </>
   );
 }
 

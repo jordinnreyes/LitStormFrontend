@@ -55,13 +55,23 @@ export default function QuizActivos() {
               <Text style={{ color: theme.colors.onSurface }}>{item.tema}</Text>
             </Card.Content>
             <Card.Actions>
-              <Button
-                mode="contained"
-                onPress={() => router.push({ pathname: "./QuizPlayer", params: { quizId: item.id } })}
-                style={{ marginTop: 8 }}
-              >
-                Resolver quiz
-              </Button>
+<Button
+  mode="contained"
+  onPress={() => {
+    const fechaInicio = new Date(item.fecha_inicio);
+    const ahora = new Date();
+
+    if (ahora < fechaInicio) {
+      alert("⏳ El quiz aún no está disponible. Intenta más tarde.");
+      return;
+    }
+
+    router.push({ pathname: "./QuizPlayer", params: { quizId: item.id } });
+  }}
+  style={{ marginTop: 8 }}
+>
+  Resolver quiz
+</Button>
             </Card.Actions>
           </Card>
         )}
