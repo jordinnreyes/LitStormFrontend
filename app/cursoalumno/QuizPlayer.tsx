@@ -71,9 +71,11 @@ console.log('🟢 Intentando obtener preguntas del quiz:', quizId, storedToken);
           quizId: quizId as string,
           alumnoId: storedAlumnoId || '',
           token: storedToken || '',
-            // podrías pasar preguntas/respuestas guardadas si ya las tienes
-            preguntas: JSON.stringify(preguntas),
-            respuestasUsuario: JSON.stringify(respuestas.preguntas) // ✅ esto sí es correcto
+          // podrías pasar preguntas/respuestas guardadas si ya las tienes
+          preguntas: JSON.stringify(preguntas),
+          respuestasUsuario: JSON.stringify(respuestas.preguntas), // ✅ esto sí es correcto
+          puntuacion: respuestas.puntuacion?.toString(),
+          total: respuestas.total?.toString()
           }
         });
       }

@@ -60,9 +60,15 @@ const alumnoIdStr = typeof alumnoId === 'string' ? alumnoId : '';
 const tokenStr = typeof token === 'string' ? token : '';
 */
 
+/*
   const correctas = respuestasArr.filter(r => r.esCorrecta).length;
   const total = preguntasArr.length;
+  */
 console.log("📦 Params recibidos:", params);
+
+const correctas = params.puntuacion ? parseInt(params.puntuacion as string) : respuestasArr.filter(r => r.esCorrecta).length;
+const total = params.total ? parseInt(params.total as string) : preguntasArr.length;
+
 
 const respuestas = preguntasArr.map((pregunta, index) => ({
   pregunta_id: pregunta.id,
