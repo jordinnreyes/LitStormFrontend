@@ -45,25 +45,7 @@ const quizIdStr = typeof params.quizId === 'string' ? params.quizId : '';
 const alumnoIdStr = typeof params.alumnoId === 'string' ? params.alumnoId : '';
 const tokenStr = typeof params.token === 'string' ? params.token : '';
 
-  /*
-  const { quizId, alumnoId, token } = useLocalSearchParams();
 
-  const { preguntas, respuestasUsuario } = useLocalSearchParams();
-  const preguntasArr: Pregunta[] = preguntas ? JSON.parse(preguntas as string) : [];
-  const respuestasArr: RespuestaUsuario[] = respuestasUsuario ? JSON.parse(respuestasUsuario as string) : [];
-  const correctas = respuestasArr.filter(r => r.esCorrecta).length;
-  const total = preguntasArr.length;
-
-
-  const quizIdStr = typeof quizId === 'string' ? quizId : '';
-const alumnoIdStr = typeof alumnoId === 'string' ? alumnoId : '';
-const tokenStr = typeof token === 'string' ? token : '';
-*/
-
-/*
-  const correctas = respuestasArr.filter(r => r.esCorrecta).length;
-  const total = preguntasArr.length;
-  */
 console.log("📦 Params recibidos:", params);
 
 const correctas = params.puntuacion ? parseInt(params.puntuacion as string) : respuestasArr.filter(r => r.esCorrecta).length;
