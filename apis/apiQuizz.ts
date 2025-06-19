@@ -1,7 +1,7 @@
 import axios from 'axios';
 
-//const API_URL = 'http://192.168.100.50:8002';
-const API_URL = 'http://192.168.1.42:8002';
+const API_URL = 'http://192.168.100.50:8002';
+//const API_URL = 'http://192.168.1.42:8002';
 
 
 export const crearQuizz = async (quiz: any, token: string) => {

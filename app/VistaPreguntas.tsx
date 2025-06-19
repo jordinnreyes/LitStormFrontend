@@ -107,6 +107,7 @@ export default function VistaPreguntas() {
 
         <Button mode="contained"
         onPress={handleGuardarPreguntas}
+        labelStyle={{ color: '#fff', fontWeight: 'bold' }}
         style={styles.botonGuardar}
       >
         Guardar preguntas
@@ -118,7 +119,7 @@ export default function VistaPreguntas() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingBottom: 40,
+    backgroundColor: '#1e3c72',
     minHeight: '100%',
   },
   title: {
@@ -126,57 +127,53 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: 'bold',
     fontSize: 22,
-    letterSpacing: 0.2,
+    color: '#FFDC64',
   },
   card: {
-    backgroundColor: '#fff',
+    backgroundColor: '#1f2937',
     borderRadius: 16,
     padding: 18,
     marginBottom: 24,
-    elevation: 4, // Android shadow
-    shadowColor: '#000', // iOS shadow
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.13,
-    shadowRadius: 8,
     borderWidth: 1,
-    borderColor: '#ececec',
+    borderColor: '#3b82f6',
   },
   preguntaTexto: {
     fontSize: 17,
     fontWeight: '700',
-    color: '#222',
+    color: '#f3f4f6',
     marginBottom: 10,
   },
   preguntaContenido: {
     fontSize: 14,
     marginBottom: 12,
-    color: '#555',
+    color: '#e5e7eb',
   },
- opcion: {
+  opcion: {
     fontSize: 14,
     paddingVertical: 4,
     paddingHorizontal: 8,
     marginBottom: 4,
     borderRadius: 6,
-    backgroundColor: '#f2f2f2',
-    color: '#333',
+    backgroundColor: '#374151',
+    color: '#f3f4f6',
   },
   opcionCorrecta: {
-    backgroundColor: '#d1e7dd',
-    color: '#0f5132',
+    backgroundColor: '#10b981',
+    color: '#fff',
     fontWeight: 'bold',
   },
   explicacionTitulo: {
     marginTop: 12,
     fontWeight: '600',
-    color: '#555',
+    color: '#a1a1aa',
   },
   explicacionTexto: {
     fontSize: 13,
-    color: '#444',
+    color: '#d1d5db',
   },
-    botonGuardar: {
+  botonGuardar: {
     marginTop: 20,
     alignSelf: 'center',
+    backgroundColor: '#10b981',
   },
 });

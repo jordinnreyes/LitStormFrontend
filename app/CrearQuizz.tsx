@@ -203,6 +203,7 @@ export default function CrearQuizz() {
         onChangeText={setTitulo} 
         style={styles.input} 
         mode="outlined"
+        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
       />
       
       <TextInput
@@ -211,6 +212,7 @@ export default function CrearQuizz() {
           onChangeText={setTema}
           style={styles.input}
           mode="outlined"
+          theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
           right={
             <TextInput.Icon
               icon="menu-down"
@@ -241,6 +243,7 @@ export default function CrearQuizz() {
         keyboardType="numeric" 
         style={styles.input}
         mode="outlined"
+        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
       />
       
       {/* Sección de fechas */}
@@ -249,6 +252,7 @@ export default function CrearQuizz() {
         <Button 
           mode="outlined" 
           onPress={abrirPickerInicio} 
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
           style={[styles.button, styles.dateButton]}
           icon="calendar"
         >
@@ -257,7 +261,8 @@ export default function CrearQuizz() {
         
         <Button 
           mode="outlined" 
-          onPress={abrirPickerFin} 
+          onPress={abrirPickerFin}
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }} 
           style={[styles.button, styles.dateButton, {marginTop: 8}]}
           icon="calendar"
         >
@@ -298,6 +303,7 @@ export default function CrearQuizz() {
         <Button 
           mode="outlined" 
           onPress={handleGenerarPreguntas} 
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
           style={[styles.button, {marginBottom: 8}]}
           icon="robot"
         >
@@ -321,6 +327,7 @@ export default function CrearQuizz() {
               },
             });
           }}
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
           style={[styles.button, {marginBottom: 16}]}
           icon="playlist-plus"
         >
@@ -331,6 +338,7 @@ export default function CrearQuizz() {
           mode="contained" 
           onPress={handleCrearQuizz}
           disabled={preguntasTextos.length === 0}
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
           style={styles.button}
           icon="check"
         >
@@ -359,21 +367,24 @@ const styles = StyleSheet.create({
   container: { 
     padding: 20, 
     paddingBottom: 40,
+    backgroundColor: '#1e3c72',
   },
   title: {
     marginBottom: 24,
     textAlign: 'center',
-    color: 'white',
+    color: '#FFDC64',
     fontWeight: 'bold',
   },
   sectionTitle: {
     marginTop: 8,
     marginBottom: 16,
     fontWeight: '600',
-    color: 'white',
+    color: '#f3f4f6',
   },
   input: { 
     marginBottom: 20,
+    backgroundColor: '#1f2937',
+    borderRadius: 12,
   },
   dateContainer: {
     marginBottom: 16,
@@ -382,10 +393,14 @@ const styles = StyleSheet.create({
     width: '100%',
     justifyContent: 'flex-start',
     paddingVertical: 8,
+    backgroundColor: '#1f2937',
+    borderRadius: 12,
+    borderColor: '#3b82f6',
   },
   button: {
     marginTop: 8,
-    borderRadius: 4,
+    borderRadius: 30,
+    backgroundColor: '#10b981',
   },
   actionsContainer: {
     marginTop: 24,
@@ -394,21 +409,23 @@ const styles = StyleSheet.create({
   message: {
     marginTop: 16,
     textAlign: 'center',
-    color: 'white',
+    color: '#f87171',
   },
   questionsContainer: {
     marginTop: 24,
     paddingTop: 16,
     borderTopWidth: 1,
-    borderTopColor: 'white',
+    borderTopColor: '#f3f4f6',
   },
   questionItem: {
     padding: 12,
     borderRadius: 8,
     marginBottom: 8,
+    backgroundColor: '#1f2937',
   },
   questionText: {
     fontSize: 14,
     lineHeight: 20,
+    color: 'white',
   },
 });

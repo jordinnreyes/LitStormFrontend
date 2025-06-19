@@ -1,4 +1,3 @@
-// components/TopBarUser.tsx
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useState } from 'react';
@@ -16,17 +15,22 @@ export default function TopBarUser() {
     router.push('/PerfilUsuario');
   };
 
-    const handleLogout = async () => {
+  const handleLogout = async () => {
     await SecureStore.deleteItemAsync('token');
     setToken(null);
     setModalVisible(false);
-    router.replace('/'); // Redirige al inicio o login
+    router.replace('/');
   };
 
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={() => setModalVisible(true)}>
-        <Avatar.Icon size={40} icon="account" />
+        <Avatar.Icon
+          size={40}
+          icon="account"
+          style={{ backgroundColor: "#facc15" }}
+          color="#1f2937"
+        />
       </TouchableOpacity>
 
       <Modal
@@ -41,17 +45,25 @@ export default function TopBarUser() {
               mode="outlined"
               onPress={handleVerPerfil}
               style={styles.actionButton}
+              labelStyle={styles.labelText}
             >
               Ver perfil
             </Button>
 
-<Button mode="outlined" onPress={handleLogout} style={styles.logoutButton}>
+            <Button
+              mode="outlined"
+              onPress={handleLogout}
+              style={[styles.actionButton, styles.logoutButton]}
+              labelStyle={[styles.labelText, { color: '#ef4444' }]}
+            >
               Cerrar sesión
             </Button>
+
             <Button
               mode="contained"
               onPress={() => setModalVisible(false)}
               style={styles.closeButton}
+              labelStyle={{ color: '#fff', fontWeight: 'bold' }}
             >
               Cancelar
             </Button>
@@ -75,18 +87,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   modalContainer: {
-    backgroundColor: 'white',
+    backgroundColor: '#1f2937',
     padding: 20,
-    borderRadius: 8,
-    width: '70%',
+    borderRadius: 12,
+    width: '80%',
     alignItems: 'center',
   },
   actionButton: {
-    marginBottom: 10,
+    marginBottom: 12,
     alignSelf: 'stretch',
+    borderColor: '#94a3b8',
+    borderWidth: 1,
   },
-  logoutButton: { marginBottom: 12, alignSelf: 'stretch', borderColor: 'red', borderWidth: 1 },
+  logoutButton: {
+    borderColor: '#ef4444',
+  },
   closeButton: {
     alignSelf: 'stretch',
+    backgroundColor: '#3b82f6',
+    borderRadius: 30,
+    paddingVertical: 6,
+  },
+  labelText: {
+    color: '#e5e7eb',
+    fontWeight: 'bold',
   },
 });

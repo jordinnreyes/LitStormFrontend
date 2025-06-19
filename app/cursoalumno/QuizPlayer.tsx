@@ -1,23 +1,20 @@
-// src/components/QuizPlayer.tsx (ajusta la ruta si es necesario)
-
 import { obtenerPreguntasPorQuiz, obtenerRespuestasDeAlumno, verificarRespuesta } from '@/apis/apiQuizz';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { ActivityIndicator, ScrollView, StyleSheet, TouchableOpacity } from 'react-native';
-import { Button, Card, Text, useTheme } from 'react-native-paper';
+import { Button, Card, Text } from 'react-native-paper';
 
 interface Pregunta {
   id: string;
   texto: string;
   opciones: string[];
-  respuesta_correcta: number; // ahora es un índice numérico
+  respuesta_correcta: number;
   tema: string;
   explicacion: string;
 }
 
 export default function QuizPlayer() {
-  const theme = useTheme();
   const { quizId } = useLocalSearchParams();
   const router = useRouter();
   const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
@@ -25,76 +22,47 @@ export default function QuizPlayer() {
   const [respuestaSeleccionada, setRespuestaSeleccionada] = useState<number | null>(null);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [respuestasUsuario, setRespuestasUsuario] = useState<{seleccionada: number, esCorrecta: boolean}[]>([]);
+  const [respuestasUsuario, setRespuestasUsuario] = useState<{ seleccionada: number, esCorrecta: boolean }[]>([]);
+  const [token, setToken] = useState<string | null>(null);
+  const [alumnoId, setAlumnoId] = useState<string | null>(null);
 
+  useEffect(() => {
+    const checkSiYaRespondio = async () => {
+      try {
+        const storedToken = await SecureStore.getItemAsync('token');
+        const storedAlumnoId = await SecureStore.getItemAsync('alumnoId');
 
-const [token, setToken] = useState<string | null>(null);
-const [alumnoId, setAlumnoId] = useState<string | null>(null);
+        setToken(storedToken);
+        setAlumnoId(storedAlumnoId);
 
-useEffect(() => {
-  const checkSiYaRespondio = async () => {
-    try {
-      const storedToken = await SecureStore.getItemAsync('token');
-      const storedAlumnoId = await SecureStore.getItemAsync('alumnoId');
+        if (!storedToken || !storedAlumnoId) return;
 
-            console.log('📦 Token recuperadoo:', storedToken);
-      console.log('📦 Alumno ID recuperadoo:', storedAlumnoId);
+        const result = await verificarRespuesta(quizId as string, storedAlumnoId as string);
 
-    setToken(storedToken);
-    setAlumnoId(storedAlumnoId);
+        if (result.respondido) {
+          const preguntas = await obtenerPreguntasPorQuiz(quizId as string, storedToken);
+          const respuestas = await obtenerRespuestasDeAlumno(quizId as string, storedAlumnoId, storedToken);
 
-
-        if (!storedToken || !storedAlumnoId) {
-      console.error("Token o alumnoId no encontrados");
-      return;
-    }
-      const result = await verificarRespuesta(quizId as string, storedAlumnoId as string);
-
-      console.log('✅ Resultado verificación:', result);
-      if (result.respondido) {
-
-console.log('🟢 Intentando obtener preguntas del quiz:', quizId, storedToken);
-    const preguntas = await obtenerPreguntasPorQuiz(quizId as string, storedToken);
-    console.log('✅ Preguntas obtenidas:', preguntas);
-
-    console.log('🟢 Intentando obtener respuestas del alumno:', quizId, storedAlumnoId);
-    const respuestas = await obtenerRespuestasDeAlumno(quizId as string, storedAlumnoId, storedToken);
-    console.log('✅ Respuestas del alumno obtenidas:', respuestas);
-
-    //setRespuestasUsuario(respuestas.preguntas); // Solo si deseas guardarlas en el estado también
-
-
-        // Redirige directamente a CorreccionQuiz
-        router.replace({
-          pathname: '/cursoalumno/CorreccionQuiz',
-          params: {
-          quizId: quizId as string,
-          alumnoId: storedAlumnoId || '',
-          token: storedToken || '',
-          // podrías pasar preguntas/respuestas guardadas si ya las tienes
-          preguntas: JSON.stringify(preguntas),
-          respuestasUsuario: JSON.stringify(respuestas.preguntas), // ✅ esto sí es correcto
-          puntuacion: respuestas.puntuacion?.toString(),
-          total: respuestas.total?.toString()
-          }
-        });
+          router.replace({
+            pathname: '/cursoalumno/CorreccionQuiz',
+            params: {
+              quizId: quizId as string,
+              alumnoId: storedAlumnoId || '',
+              token: storedToken || '',
+              preguntas: JSON.stringify(preguntas),
+              respuestasUsuario: JSON.stringify(respuestas.preguntas),
+              puntuacion: respuestas.puntuacion?.toString(),
+              total: respuestas.total?.toString()
+            }
+          });
+        }
+      } catch (error) {
+        console.error('❌ Error en verificación:', error);
       }
-    } catch (error) {
-        if (error instanceof Error) {
-    console.error('❌ Error (tipo Error):', error.message);
-  } else {
-    console.error('❌ Error desconocido:', error);
-  }
-    }
-  };
+    };
 
-  if (quizId) checkSiYaRespondio();
-}, [quizId]);
-
-
-
-
-
+    if (quizId) checkSiYaRespondio();
+  }, [quizId]);
 
   useEffect(() => {
     const fetchPreguntas = async () => {
@@ -105,13 +73,6 @@ console.log('🟢 Intentando obtener preguntas del quiz:', quizId, storedToken);
           setCargando(false);
           return;
         }
-
-
-
-        
-  const alumnoId = await SecureStore.getItemAsync('alumnoId'); // si lo guardaste así
-
-
 
         const data = await obtenerPreguntasPorQuiz(quizId as string, token);
         setPreguntas(data);
@@ -129,35 +90,30 @@ console.log('🟢 Intentando obtener preguntas del quiz:', quizId, storedToken);
     setRespuestaSeleccionada(indice);
   };
 
-  const handleEnviarRespuesta = async  () => {
+  const handleEnviarRespuesta = async () => {
     if (respuestaSeleccionada !== null) {
       const pregunta = preguntas[preguntaActual];
       const esCorrecta = respuestaSeleccionada === pregunta.respuesta_correcta;
-      //setRespuestasUsuario(prev => [...prev, { seleccionada: respuestaSeleccionada, esCorrecta }]);
-const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }];
+      const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }];
 
       if (preguntaActual < preguntas.length - 1) {
         setPreguntaActual(preguntaActual + 1);
         setRespuestaSeleccionada(null);
-
         setRespuestasUsuario(nuevasRespuestas);
-
       } else {
-      // 🔽 Recupera el token y alumnoId directamente aquí
-      const token = await SecureStore.getItemAsync('token');
-      const alumnoId = await SecureStore.getItemAsync('alumnoId');
-      console.log("🧪 Envío final - token:", token);
-      console.log("🧪 Envío final - alumnoId:", alumnoId);
-        
-        // Navegar a CorreccionQuiz pasando preguntas y respuestasUsuario
-        router.replace({ 
-          pathname: '/cursoalumno/CorreccionQuiz', 
-          params: { preguntas: JSON.stringify(preguntas),
-             //respuestasUsuario: JSON.stringify([...respuestasUsuario, { seleccionada: respuestaSeleccionada, esCorrecta }]), 
-             respuestasUsuario: JSON.stringify(nuevasRespuestas),
-             quizId: quizId as string,
-    alumnoId: alumnoId || '',
-    token: token || '',       } });
+        const token = await SecureStore.getItemAsync('token');
+        const alumnoId = await SecureStore.getItemAsync('alumnoId');
+
+        router.replace({
+          pathname: '/cursoalumno/CorreccionQuiz',
+          params: {
+            preguntas: JSON.stringify(preguntas),
+            respuestasUsuario: JSON.stringify(nuevasRespuestas),
+            quizId: quizId as string,
+            alumnoId: alumnoId || '',
+            token: token || '',
+          }
+        });
       }
     }
   };
@@ -167,22 +123,23 @@ const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSelecci
   }
 
   if (error) {
-    return <Text style={{ color: theme.colors.error, margin: 20 }}>{error}</Text>;
+    return <Text style={{ color: '#f87171', margin: 20 }}>{error}</Text>;
   }
 
   if (!preguntas.length) {
-    return <Text style={{ margin: 20, color: theme.colors.onSurface }}>No hay preguntas disponibles.</Text>;
+    return <Text style={{ margin: 20, color: '#f3f4f6' }}>No hay preguntas disponibles.</Text>;
   }
 
   const pregunta = preguntas[preguntaActual];
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, {backgroundColor: theme.colors.background}]}> 
-      <Card style={{ marginBottom: 20, backgroundColor: theme.colors.elevation.level1 }}>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Card style={styles.card}>
         <Card.Content>
-          <Text variant="titleLarge" style={[styles.titulo, {color: theme.colors.onSurface}]}>{pregunta.texto}</Text>
+          <Text style={styles.titulo}>{pregunta.texto}</Text>
         </Card.Content>
       </Card>
+
       {pregunta.opciones.map((opcion: string, i: number) => {
         const isSelected = respuestaSeleccionada === i;
         return (
@@ -190,38 +147,33 @@ const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSelecci
             key={i}
             style={[
               styles.botonOpcion,
-              {
-                backgroundColor: isSelected
-                  ? theme.colors.primary
-                  : theme.colors.elevation.level2,
-                borderColor: isSelected
-                  ? theme.colors.primary
-                  : theme.colors.outlineVariant,
-              }
+              isSelected && styles.botonSeleccionado
             ]}
             onPress={() => handleSeleccionarRespuesta(i)}
             disabled={respuestaSeleccionada !== null}
             activeOpacity={0.85}
           >
-            <Text style={{
-              color: isSelected
-                ? theme.colors.onPrimary
-                : theme.colors.onSurface,
-              fontWeight: isSelected ? 'bold' : 'normal',
-              fontSize: 16,
-            }}>{opcion}</Text>
+            <Text style={[
+              styles.textoOpcion,
+              isSelected && styles.textoSeleccionado
+            ]}>
+              {opcion}
+            </Text>
           </TouchableOpacity>
         );
       })}
+
       <Button
         mode="contained"
         onPress={handleEnviarRespuesta}
         disabled={respuestaSeleccionada === null}
-        style={{ marginTop: 24 }}
+        style={styles.botonEnviar}
+        labelStyle={{ color: '#fff', fontWeight: 'bold' }}
       >
         Enviar
       </Button>
-      <Text style={{ marginTop: 20, color: theme.colors.onSurface, textAlign: 'center' }}>
+
+      <Text style={styles.contador}>
         Pregunta {preguntaActual + 1} de {preguntas.length}
       </Text>
     </ScrollView>
@@ -229,14 +181,51 @@ const nuevasRespuestas = [...respuestasUsuario, { seleccionada: respuestaSelecci
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16 },
-  titulo: { fontSize: 20, marginBottom: 12 },
+  container: {
+    padding: 16,
+    backgroundColor: '#1e3c72',
+    minHeight: '100%',
+  },
+  card: {
+    marginBottom: 20,
+    backgroundColor: '#1f2937',
+    borderRadius: 10,
+  },
+  titulo: {
+    fontSize: 20,
+    marginBottom: 12,
+    color: '#f9fafb',
+    fontWeight: 'bold',
+  },
   botonOpcion: {
-    padding: 10,
+    padding: 12,
     borderRadius: 8,
-    marginVertical: 5,
+    marginVertical: 6,
+    backgroundColor: '#374151',
+    borderWidth: 1,
+    borderColor: '#6b7280',
   },
   botonSeleccionado: {
-    
+    backgroundColor: '#10b981',
+    borderColor: '#10b981',
+  },
+  textoOpcion: {
+    color: '#e5e7eb',
+    fontSize: 16,
+  },
+  textoSeleccionado: {
+    color: '#fff',
+    fontWeight: 'bold',
+  },
+  botonEnviar: {
+    marginTop: 24,
+    backgroundColor: '#10b981',
+    borderRadius: 30,
+  },
+  contador: {
+    marginTop: 20,
+    color: '#e5e7eb',
+    textAlign: 'center',
+    fontSize: 14,
   },
 });

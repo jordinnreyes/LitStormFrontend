@@ -3,8 +3,8 @@ import axios from 'axios';
 //const API_URL = 'http://localhost:8080';
 //const API_URL = 'http://10.100.224.45:8080';
 
-//const API_URL = 'http://192.168.100.50:8001';
-const API_URL = 'http://192.168.1.42:8001';
+const API_URL = 'http://192.168.100.50:8001';
+//const API_URL = 'http://192.168.1.42:8001';
 
 
 // añadido el 13/06/2025

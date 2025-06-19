@@ -1,4 +1,4 @@
-// app/(auth)/register.tsx
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet } from 'react-native';
@@ -10,120 +10,173 @@ export default function RegisterScreen() {
   const [password, setPassword] = useState('');
   const [nombre, setNombre] = useState('');
   const [apellido, setApellido] = useState('');
-  const [role, setRole] = useState('alumno'); // valor por defecto
-
+  const [role, setRole] = useState('alumno');
   const router = useRouter();
 
   const handleRegister = async () => {
     try {
-      const body = {
-        email,
-        password,
-        nombre,
-        apellido,
-        role
-      };
-      
+      const body = { email, password, nombre, apellido, role };
       const result = await register(body);
-      console.log('Registro exitoso:', result);
-      // Redirigir al login
-      router.replace('/Login'); // o router.push('/Login')
+      router.replace('/Login');
     } catch (err) {
       console.error('Error al registrar:', err);
     }
   };
 
-
-  const roleTextColor = role === 'profesor' ? styles.profesorText : styles.alumnoText;
-
   return (
-        <KeyboardAvoidingView
+    <KeyboardAvoidingView
       style={{ flex: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-      keyboardVerticalOffset={50} // ajusta si tienes header o barra de estado
+      keyboardVerticalOffset={50}
     >
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text variant="titleLarge" style={styles.title}>Registro</Text>
+      <LinearGradient
+        colors={['#1e3c72', '#2a5298']}
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text variant="displayMedium" style={styles.title}>Registro</Text>
 
-            <SegmentedButtons
-        value={role}
-        onValueChange={setRole}
-        buttons={[
-          {
-            value: 'alumno',
-            label: 'Alumno',
-            style: {
-              backgroundColor: role === 'alumno' ? '#d0f0c0' : undefined,
-            },
-          },
-          {
-            value: 'profesor',
-            label: 'Profesor',
-            style: {
-              backgroundColor: role === 'profesor' ? '#c0d4f0' : undefined,
-            },
-          },
-        ]}
-        style={styles.segmented}
-      />
+          <SegmentedButtons
+            value={role}
+            onValueChange={setRole}
+            buttons={[
+              {
+                value: 'alumno',
+                label: 'Alumno',
+                style: {
+                  backgroundColor: '#10b981',
+                },
+                labelStyle: { color: '#fff', fontWeight: 'bold' },
+              },
+              {
+                value: 'profesor',
+                label: 'Profesor',
+                style: {
+                  backgroundColor: '#3b82f6',
+                },
+                labelStyle: { color: '#fff', fontWeight: 'bold' },
+              },
+            ]}
+            style={styles.segmented}
+          />
 
+          <TextInput
+            label="Nombre"
+            value={nombre}
+            onChangeText={setNombre}
+            style={styles.input}
+            mode="outlined"
+            theme={{
+              colors: {
+                text: '#000',
+                primary: '#3b82f6',
+                placeholder: '#000',
+              },
+            }}
+          />
+          <TextInput
+            label="Apellido"
+            value={apellido}
+            onChangeText={setApellido}
+            style={styles.input}
+            mode="outlined"
+            theme={{
+              colors: {
+                text: '#000',
+                primary: '#3b82f6',
+                placeholder: '#000',
+              },
+            }}
+          />
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+            mode="outlined"
+            theme={{
+              colors: {
+                text: '#000',
+                primary: '#3b82f6',
+                placeholder: '#000',
+              },
+            }}
+          />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry
+            style={styles.input}
+            mode="outlined"
+            theme={{
+              colors: {
+                text: '#000',
+                primary: '#3b82f6',
+                placeholder: '#000',
+              },
+            }}
+          />
 
+          <Text style={styles.selectedRole}>
+            Rol seleccionado: <Text style={role === 'profesor' ? styles.profesorText : styles.alumnoText}>{role}</Text>
+          </Text>
 
-        <TextInput
-        label="Nombre"
-        value={nombre}
-        onChangeText={setNombre}
-        style={styles.input}
-      />
-      <TextInput
-        label="Apellido"
-        value={apellido}
-        onChangeText={setApellido}
-        style={styles.input}
-      />
-      
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-      />
-
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry
-        style={styles.input}
-      />
-
-
-
-      {/* Texto de Rol seleccionado con estilo dinámico */}
-      <Text style={[styles.selectedRole, roleTextColor]}>
-        Rol seleccionado: {role}
-      </Text>
-
-      <Button mode="contained" onPress={handleRegister} style={styles.button}>
-        Registrarse
-      </Button>
-    </ScrollView>
+          <Button
+            mode="contained"
+            onPress={handleRegister}
+            style={styles.button}
+            contentStyle={{ paddingVertical: 10 }}
+            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+          >
+            Registrarse
+          </Button>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  input: { marginBottom: 12 },
-  title: { marginBottom: 20, textAlign: 'center' },
-  button: { marginTop: 20 },
-  segmented: { marginVertical: 12 },
-
-  // Colores dinámicos
-  selectedRole: { fontSize: 16, textAlign: 'center', marginVertical: 10 },
-  alumnoText: { color: 'green', fontWeight: 'bold' },
-  profesorText: { color: 'blue', fontWeight: 'bold' },
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  title: {
+    color: '#FFDC64',
+    textAlign: 'center',
+    fontWeight: 'bold',
+    marginBottom: 24,
+  },
+  input: {
+    marginBottom: 16,
+    borderRadius: 12,
+  },
+  segmented: {
+    marginBottom: 24,
+    borderRadius: 8,
+    overflow: 'hidden',
+  },
+  selectedRole: {
+    fontSize: 16,
+    textAlign: 'center',
+    marginBottom: 10,
+    color: '#fff',
+  },
+  alumnoText: {
+    color: '#10b981',
+    fontWeight: 'bold',
+  },
+  profesorText: {
+    color: '#3b82f6',
+    fontWeight: 'bold',
+  },
+  button: {
+    backgroundColor: '#10b981',
+    borderRadius: 30,
+    marginTop: 16,
+  },
 });
-

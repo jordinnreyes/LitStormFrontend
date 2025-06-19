@@ -1,3 +1,4 @@
+import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useState } from 'react';
@@ -7,113 +8,131 @@ import { fetchUserProfile } from '../apis/apiGetProfileRole';
 import { login } from '../apis/apiLoginRegister';
 import { useAuth } from '../context/AuthContext';
 
+type Props = { onAuthenticate: (token: string) => void; };
 
-// Props del componente
-type Props = {onAuthenticate: (token: string) => void;};
-
-
-export default function LoginScreen({onAuthenticate }: Props) {
+export default function LoginScreen({ onAuthenticate }: Props) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
-const { setToken ,setRole } = useAuth();
-
-const [showPassword, setShowPassword] = useState(false);
+  const { setToken, setRole } = useAuth();
 
   const handleLogin = async () => {
     if (!email || !password) {
       setError('Email and password are required');
       return;
     }
-
     try {
-       console.log("Intentando login con:", email, password); // 🔍 nuevo log
-      
-      const token = await login(email, password); // usa email como username
-      console.log("Token obtenido:", token);
-
-      setToken(token); // <- AQUÍ es donde lo usas
+      const token = await login(email, password);
+      setToken(token);
       await SecureStore.setItemAsync('token', token);
 
       const user: any = await fetchUserProfile(token);
-      setRole(user.role); // 👈 Guardás el rol
-await SecureStore.setItemAsync('role', user.role); // 👈 Lo guardás también en almacenamiento segu
-      console.log("Usuario logueado:", user);
+      setRole(user.role);
+      await SecureStore.setItemAsync('role', user.role);
+      if (user.id) await SecureStore.setItemAsync('alumnoId', user.id.toString());
 
+      if (user.role === 'alumno') router.replace('/AlumnoHome');
+      else if (user.role === 'profesor') router.replace('/ProfesorHome');
 
-      if (user.id) {
-  await SecureStore.setItemAsync('alumnoId', user.id.toString());
-  console.log("🔐 ID de alumno guardado:", user.id);
-} else {
-  console.warn("⚠️ No se encontró el ID del usuario en el perfil.");
-}
-      // Guardar el ID del usuario en SecureStore
-      // await SecureStore.setItemAsync('userId', user.id.toString()); // <- opcional, si necesitas el ID del usuario
-
-
-      // Redirige según el rol
-      if (user.role === 'alumno') {
-        router.replace('/AlumnoHome');
-        //router.push('/AlumnoHome');
-      } else if (user.role === 'profesor') {
-        console.log("Redirigiendo a ProfesorHome");
-        router.replace('/ProfesorHome');
-        //router.push('/ProfesorHome');
-      }
-
-      // Intenta ejecutar el callback
-      if (onAuthenticate) {
-        onAuthenticate(token);
-      } else {
-        console.warn("onAuthenticate no está definido");
-      }
-      // <- puede lanzar error si es undefined o mal implementado
+      if (onAuthenticate) onAuthenticate(token);
     } catch (e) {
-      console.error('Login error:', e);
       setError('Invalid credentials or server error');
     }
   };
 
   return (
     <KeyboardAvoidingView
-  style={{ flex: 1 }}
-  behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-  keyboardVerticalOffset={50} // Ajusta según si tienes barra superior
->
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-      <Text variant="titleLarge" style={styles.title}>Iniciar sesión</Text>
-      <TextInput
-        label="Email"
-        value={email}
-        onChangeText={setEmail}
-        keyboardType="email-address"
-        autoCapitalize="none"
-        style={styles.input}
-      />
-      <TextInput
-        label="Password"
-        value={password}
-        onChangeText={setPassword}
-        secureTextEntry={!showPassword}
-        style={styles.input}
-        right={
-            <TextInput.Icon
-              icon={showPassword ? "eye-off" : "eye"}
-              onPress={() => setShowPassword(!showPassword)}  />
-          }
-      />
-      {error ? <Text style={styles.error}>{error}</Text> : null}
-      <Button mode="contained" onPress={handleLogin}>Login</Button>
-      <Button onPress={() => router.push('/Register')}>¿No tienes cuenta? Regístrate</Button>
-    </ScrollView>
+      style={{ flex: 1 }}
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    >
+      <LinearGradient
+        colors={['#1e3c72', '#2a5298']} // nuevo fondo azul profundo
+        style={{ flex: 1 }}
+      >
+        <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+          <Text variant="displayMedium" style={styles.title}>LitStorm</Text>
+
+          <TextInput
+            label="Email"
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.input}
+            mode="outlined"
+            theme={{ colors: { text: '#111827', primary: '#3b82f6' } }}
+          />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={setPassword}
+            secureTextEntry={!showPassword}
+            style={styles.input}
+            mode="outlined"
+            theme={{ colors: { text: '#111827', primary: '#3b82f6' } }}
+            right={
+              <TextInput.Icon
+                icon={showPassword ? "eye-off" : "eye"}
+                onPress={() => setShowPassword(!showPassword)}
+              />
+            }
+          />
+          {error ? <Text style={styles.error}>{error}</Text> : null}
+
+          <Button
+            mode="contained"
+            onPress={handleLogin}
+            style={styles.loginButton}
+            contentStyle={{ paddingVertical: 10 }}
+            labelStyle={{ color: '#fff', fontWeight: 'bold', fontSize: 16 }}
+          >
+            Iniciar sesión
+          </Button>
+
+          <Button
+            onPress={() => router.push('/Register')}
+            style={styles.registerButton}
+            labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+          >
+            ¿No tienes cuenta? Regístrate
+          </Button>
+        </ScrollView>
+      </LinearGradient>
     </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flexGrow: 1, justifyContent: 'center', padding: 20 },
-  input: { marginBottom: 12 },
-  error: { color: 'red', marginBottom: 10 },
-  title: { marginBottom: 20, textAlign: 'center' }
-});
+  container: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    padding: 24,
+  },
+  title: {
+    color: '#FFDC64',
+    fontWeight: 'bold',
+    textAlign: 'center',
+    marginBottom: 40,
+  },
+  input: {
+    marginBottom: 16,
+    borderRadius: 12,
+  },
+  loginButton: {
+    backgroundColor: '#3b82f6',
+    borderRadius: 30,
+    marginTop: 10,
+  },
+  registerButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 30,
+    marginTop: 12,
+  },
+  error: {
+    color: '#f87171',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+}); 

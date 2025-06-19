@@ -1,8 +1,8 @@
-import { evaluarQuiz } from '@/apis/apiQuizz'; // Asegúrate de tener esta función implementada
+import { evaluarQuiz } from '@/apis/apiQuizz';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Card, Text, useTheme } from 'react-native-paper';
+import { Card, Text } from 'react-native-paper';
 
 interface Pregunta {
   id: string;
@@ -18,11 +18,6 @@ interface RespuestaUsuario {
   esCorrecta: boolean;
 }
 
-
-
-
-
-
 export interface ResultadoPregunta {
   texto: string;
   correcta: boolean;
@@ -32,113 +27,70 @@ export interface ResultadoPregunta {
   feedback_ia?: string;
 }
 
-
 export default function CorreccionQuiz() {
-  const theme = useTheme();
-
   const params = useLocalSearchParams();
 
-const preguntasArr: Pregunta[] = params.preguntas ? JSON.parse(params.preguntas as string) : [];
-const respuestasArr: RespuestaUsuario[] = params.respuestasUsuario ? JSON.parse(params.respuestasUsuario as string) : [];
+  const preguntasArr: Pregunta[] = params.preguntas ? JSON.parse(params.preguntas as string) : [];
+  const respuestasArr: RespuestaUsuario[] = params.respuestasUsuario ? JSON.parse(params.respuestasUsuario as string) : [];
 
-const quizIdStr = typeof params.quizId === 'string' ? params.quizId : '';
-const alumnoIdStr = typeof params.alumnoId === 'string' ? params.alumnoId : '';
-const tokenStr = typeof params.token === 'string' ? params.token : '';
+  const quizIdStr = typeof params.quizId === 'string' ? params.quizId : '';
+  const alumnoIdStr = typeof params.alumnoId === 'string' ? params.alumnoId : '';
+  const tokenStr = typeof params.token === 'string' ? params.token : '';
 
+  const correctas = params.puntuacion
+    ? parseInt(params.puntuacion as string)
+    : respuestasArr.filter((r) => r.esCorrecta).length;
 
-console.log("📦 Params recibidos:", params);
+  const total = params.total ? parseInt(params.total as string) : preguntasArr.length;
 
-const correctas = params.puntuacion ? parseInt(params.puntuacion as string) : respuestasArr.filter(r => r.esCorrecta).length;
-const total = params.total ? parseInt(params.total as string) : preguntasArr.length;
+  const respuestas = preguntasArr.map((pregunta, index) => ({
+    pregunta_id: pregunta.id,
+    respuesta: parseInt(String(respuestasArr[index]?.seleccionada ?? '-1'), 10),
+  }));
 
+  const [resultado, setResultado] = useState<{
+    detalle: ResultadoPregunta[];
+    puntuacion: number;
+    total: number;
+  } | null>(null);
 
-const respuestas = preguntasArr.map((pregunta, index) => ({
-  pregunta_id: pregunta.id,
-  respuesta: parseInt(String(respuestasArr[index]?.seleccionada ?? "-1"), 10)
+  useEffect(() => {
+    const evaluar = async () => {
+      try {
+        const resultado = await evaluarQuiz(quizIdStr, alumnoIdStr, respuestas, tokenStr);
+        setResultado(resultado);
+      } catch (error: any) {
+        console.error('Error al evaluar el quiz:', error.response?.data || error.message);
+      }
+    };
 
-}));
-
-
-respuestas.forEach(r => {
-  console.log(`✅ ID: ${r.pregunta_id}, Respuesta: ${r.respuesta}, Tipoov: ${typeof r.respuesta}`);
-});
-
-
-
-
-
-
-
-
-
-
-const [resultado, setResultado] = useState<{
-  detalle: ResultadoPregunta[];
-  puntuacion: number;
-  total: number;
-  
-  // puedes añadir más campos si los usas
-} | null>(null);
-console.log("🧾 Detalle del resultado:", resultado?.detalle);
-
-console.log('📄 Resultado en render:', resultado);
-
-
-useEffect(() => {
-  const evaluar = async () => {
-    try {
-
-      console.log('📤 Enviando a evaluarQuiz:', {
-        quizIdStr,
-        alumnoIdStr,
-        respuestas,
-        tokenStr,
-      });
-      const resultado = await evaluarQuiz(quizIdStr, alumnoIdStr, respuestas, tokenStr);
-
-       console.log('✅ Resultado recibido de evaluarQuiz:', resultado);
-      setResultado(resultado);
-    } catch (error: any) {
-      console.error('Error al evaluar el quiz:', error.response?.data || error.message);
+    if (quizIdStr && alumnoIdStr && respuestas.length > 0 && tokenStr && resultado === null) {
+      evaluar();
     }
-  };
-
-  if (
-    quizIdStr &&
-    alumnoIdStr &&
-    respuestas.length > 0 &&
-    tokenStr &&
-    resultado === null // Solo si no hemos evaluado aún
-  ) {
-    console.log('✅ Condición del useEffect cumplida, ejecutando evaluar()');
-    evaluar();
-  }
-}, [quizIdStr, alumnoIdStr, respuestas, tokenStr,resultado]);
-
+  }, [quizIdStr, alumnoIdStr, respuestas, tokenStr, resultado]);
 
   return (
-    <>
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: theme.colors.background }]}> 
-      <Text style={[styles.resultado, { color: theme.colors.primary }]}>{`Obtuviste ${correctas}/${total}. ¡Buen trabajo!`}</Text>
+    <ScrollView contentContainerStyle={styles.container}>
+      <Text style={styles.resultado}>{`Obtuviste ${correctas}/${total}. respuestas correctas`}</Text>
+
       {preguntasArr.map((pregunta, idx) => {
         const esCorrecta = respuestasArr[idx]?.esCorrecta;
         const seleccionada = respuestasArr[idx]?.seleccionada;
         return (
-          <Card key={pregunta.id || idx} style={[styles.preguntaContainer, { backgroundColor: theme.colors.elevation.level1 }]}> 
+          <Card key={pregunta.id || idx} style={styles.card}>
             <Card.Content>
-              <Text style={[styles.preguntaTitulo, { color: theme.colors.onSurface }]}>{pregunta.texto}</Text>
-              <Text>
-                Tu respuesta: <Text style={{ color: esCorrecta ? theme.colors.primary || '#388e3c' : theme.colors.error }}>
-                  {seleccionada !== undefined && seleccionada !== null
-                    ? pregunta.opciones[seleccionada]
-                    : '-'}
+              <Text style={styles.preguntaTitulo}>{`Pregunta ${idx + 1}`}</Text>
+              <Text style={styles.preguntaSubtitulo}>{pregunta.texto}</Text>
+              <Text style={styles.texto}>
+                Tu respuesta:{' '}
+                <Text style={esCorrecta ? styles.correcta : styles.incorrecta}>
+                  {seleccionada !== undefined && seleccionada !== null ? pregunta.opciones[seleccionada] : '-'}
                 </Text>
               </Text>
               {!esCorrecta && (
-                <Text>
-                  Respuesta correcta: <Text style={{ color: theme.colors.primary }}>
-                    {pregunta.opciones[pregunta.respuesta_correcta]}
-                  </Text>
+                <Text style={styles.texto}>
+                  Respuesta correcta:{' '}
+                  <Text style={styles.correcta}>{pregunta.opciones[pregunta.respuesta_correcta]}</Text>
                 </Text>
               )}
             </Card.Content>
@@ -146,57 +98,91 @@ useEffect(() => {
         );
       })}
 
+      {resultado &&
+        resultado.detalle.map((item: ResultadoPregunta, idx: number) => (
+          <Card key={idx} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.preguntaTitulo}>{item.texto}</Text>
 
+              <Text style={styles.texto}>
+                Tu respuesta:{' '}
+                <Text style={item.correcta ? styles.correcta : styles.incorrecta}>
+                  {item.respuesta_usuario}
+                </Text>
+              </Text>
 
+              {!item.correcta && (
+                <Text style={styles.texto}>
+                  Respuesta correcta:{' '}
+                  <Text style={styles.correcta}>{item.respuesta_correcta}</Text>
+                </Text>
+              )}
 
+              <Text style={styles.explicacion}>Explicación: {item.explicacion}</Text>
 
-
-{resultado && resultado.detalle.map((item: ResultadoPregunta, idx: number) => (
-  <Card key={idx} style={{ marginBottom: 12 }}>
-    <Card.Content>
-      <Text style={{ fontWeight: 'bold' }}>{item.texto}</Text>
-
-      <Text style={{ marginTop: 4 }}>
-        Tu respuesta:{" "}
-        <Text style={{ color: item.correcta ? theme.colors.primary : theme.colors.error }}>
-          {item.respuesta_usuario}
-        </Text>
-      </Text>
-
-      {!item.correcta && (
-        <Text style={{ marginTop: 2 }}>
-          Respuesta correcta:{" "}
-          <Text style={{ color: theme.colors.primary }}>
-            {item.respuesta_correcta}
-          </Text>
-        </Text>
-      )}
-
-      <Text style={{ marginTop: 6, fontStyle: 'italic' }}>
-        Explicación: {item.explicacion}
-      </Text>
-
-      {!item.correcta && item.feedback_ia && (
-        <Text style={{ marginTop: 6, color: 'orange' }}>
-          Feedback IA: {item.feedback_ia}
-        </Text>
-      )}
-    </Card.Content>
-  </Card>
-))}
-
+              {!item.correcta && item.feedback_ia && (
+                <Text style={styles.feedback}>Feedback IA: {item.feedback_ia}</Text>
+              )}
+            </Card.Content>
+          </Card>
+        ))}
     </ScrollView>
-
-
-
-
-    </>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 16, paddingBottom: 32 },
-  resultado: { fontSize: 22, fontWeight: 'bold', marginBottom: 20, alignSelf: 'center', textAlign: 'center' },
-  preguntaContainer: { marginBottom: 18, borderRadius: 10, elevation: 2 },
-  preguntaTitulo: { fontWeight: 'bold', marginBottom: 8, fontSize: 16 },
+  container: {
+    padding: 18,
+    backgroundColor: '#0f172a',
+    paddingBottom: 32,
+  },
+  resultado: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    marginBottom: 20,
+    color: '#10b981',
+    textAlign: 'center',
+  },
+  card: {
+    backgroundColor: '#1f2937',
+    borderRadius: 12,
+    marginBottom: 16,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#334155',
+  },
+  preguntaTitulo: {
+    color: '#facc15',
+    fontWeight: 'bold',
+    fontSize: 16,
+    marginBottom: 6,
+  },
+  preguntaSubtitulo: {
+  color: '#cbd5e1',
+  fontSize: 14,
+  marginBottom: 6,
+},
+  texto: {
+    color: '#cbd5e1',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  correcta: {
+    color: '#10b981',
+    fontWeight: 'bold',
+  },
+  incorrecta: {
+    color: '#ef4444',
+    fontWeight: 'bold',
+  },
+  explicacion: {
+    color: '#94a3b8',
+    fontStyle: 'italic',
+    marginTop: 6,
+  },
+  feedback: {
+    color: '#facc15',
+    marginTop: 8,
+    fontStyle: 'italic',
+  },
 });
