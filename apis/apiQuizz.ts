@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://192.168.100.50:8002';
+const API_URL = 'http://18.217.235.159:8002';
 //const API_URL = 'http://192.168.1.42:8002';
 
 
@@ -187,6 +187,60 @@ export const obtenerRespuestasDeAlumno = async (
 ): Promise<RespuestasAlumno> => {
   const response = await axios.get<RespuestasAlumno>(
     `${API_URL}/respuestas/respuestas/${quiz_id}/${alumno_id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+
+
+
+export interface QuizResumen {
+  id: string;
+  titulo: string;
+  tema: string;
+  fecha_inicio: string; // o Date si lo vas a convertir luego
+  fecha_fin: string;
+  estado: string;
+}
+
+
+export const obtenerQuizzesPorCurso = async (
+  curso_id: number,
+  token: string
+): Promise<QuizResumen[]> => {
+  const response = await axios.get<QuizResumen[]>(
+    `${API_URL}/quizzes/por_curso/${curso_id}`,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    }
+  );
+  return response.data;
+};
+
+
+
+interface EstadisticasQuiz {
+  total_alumnos: number;
+  promedio_puntuacion: number;
+  preguntas_problematicas: {
+    pregunta: string;
+    total_errores: number;
+  }[];
+}
+
+export const obtenerEstadisticasDelQuiz = async (
+  quiz_id: string,
+  token: string
+): Promise<EstadisticasQuiz> => {
+  const response = await axios.get<EstadisticasQuiz>(
+    `${API_URL}/respuestas/${quiz_id}/estadisticas`,
     {
       headers: {
         Authorization: `Bearer ${token}`,

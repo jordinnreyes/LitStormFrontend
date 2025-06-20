@@ -1,8 +1,9 @@
 import { getCursos } from '@/apis/apiCursoYCodigo';
 import { useLocalSearchParams, useNavigation } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este screen
+import EstadisticasQuiz from '../EstadisticasQuiz'; // Asegúrate de tener este screen
 
 interface Curso {
   id: number;
@@ -35,14 +36,24 @@ export default function CursoHome() {
 
   if (!curso) return <Text>Cargando...</Text>;
   return (
+    <ScrollView contentContainerStyle={styles.container}>
     <View style={styles.container}>
       <Text style={styles.title}>{curso.nombre}</Text>
       <Text style={styles.subtitle}>Código de acceso: {curso.codigo_acceso}</Text>
+
 
       <View style={{ marginTop: 15 }}>
         <CrearQuiz cursoId={curso.id} />
       </View>
     </View>
+
+        <View style={{ marginTop: 40 }}>
+  <EstadisticasQuiz cursoId={curso.id} />
+</View>
+
+
+
+</ScrollView>
   );
 }
 
