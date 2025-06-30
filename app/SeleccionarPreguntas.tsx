@@ -16,11 +16,16 @@ export default function SeleccionarPreguntas() {
     const cargarPreguntas = async () => {
       try {
         setLoading(true);
+        console.log('Tema recibido en componente:', tema);
+
         const token = await SecureStore.getItemAsync('token');
+        console.log('Token usado:', token);
+
         if (!token) throw new Error('Token no encontrado');
         const preguntasTema = await obtenerPreguntasPorTema(tema, token);
         setPreguntas(preguntasTema);
-      } catch (error) {
+      } catch (error: any) {
+        console.error('Error al obtener preguntas:', error.response?.data || error.message);
         Alert.alert('Error', 'No se pudieron cargar las preguntas.');
       } finally {
         setLoading(false);
@@ -96,7 +101,7 @@ export default function SeleccionarPreguntas() {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    paddingBottom: 40,
+    paddingBottom: 80,
     backgroundColor: '#0f172a',
   },
   title: {

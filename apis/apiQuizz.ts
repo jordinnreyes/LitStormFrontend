@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = 'http://18.217.235.159:8002';
+const API_URL = 'https://litstorm.duckdns.org/evaluaciones';
 //const API_URL = 'http://192.168.1.42:8002';
 
 
@@ -37,12 +37,15 @@ export async function obtenerPreguntasPorTemaYCurso(
   curso_id: number,
   token: string
 ): Promise<any[]> {
+  console.log(`Buscando preguntas para el tema: ${tema}`);
   const res = await axios.get<any[]>(`${API_URL}/preguntas/listar`, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
     params: { tema, curso_id },
   });
+
+  console.log(`Preguntas encontradas para el tema ${tema}:`, res.data);
   return res.data;
 }
 
@@ -95,7 +98,7 @@ export interface Pregunta {
 export const obtenerPreguntasPorTema = async (tema: string, token: string): Promise<Pregunta[]> => {
   console.log(`Buscando preguntas para el tema: ${tema}`);
   const response = await axios.post<Pregunta[]>(
-    `${API_URL}/preguntas/tema`,
+    `${API_URL}/preguntas/tema/`,
     { tema },
     {
       headers: {

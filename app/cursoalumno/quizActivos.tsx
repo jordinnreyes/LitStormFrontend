@@ -1,9 +1,10 @@
-import { obtenerQuizzesActivosProgramados } from '@/apis/apiQuizz';
+import { obtenerPreguntasPorQuiz, obtenerQuizzesActivosProgramados, obtenerRespuestasDeAlumno, verificarRespuesta, } from '@/apis/apiQuizz';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import { useEffect, useState } from 'react';
 import { FlatList, StyleSheet, View } from 'react-native';
 import { Button, Card, Text } from 'react-native-paper';
+
 
 interface Quiz {
   id: string;
@@ -18,7 +19,35 @@ export default function QuizActivos() {
   const { id } = useLocalSearchParams(); // curso_id
   const router = useRouter();
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+
+  const [quizzesRespondidos, setQuizzesRespondidos] = useState<{ [quizId: string]: boolean }>({});
+
   const cursoId = parseInt(id as string);
+
+  useEffect(() => {
+    const verificarTodos = async () => {
+      const token = await SecureStore.getItemAsync('token');
+      const alumnoId = await SecureStore.getItemAsync('alumnoId');
+      const estados: { [quizId: string]: boolean } = {};
+
+      for (const quiz of quizzes) {
+        try {
+          const resp = await verificarRespuesta(quiz.id, alumnoId as string);
+          estados[quiz.id] = resp.respondido;
+        } catch (error) {
+          estados[quiz.id] = false; // fallback
+          console.error('Error verificando respuesta de quiz:', quiz.id, error);
+        }
+      }
+
+      setQuizzesRespondidos(estados);
+    };
+
+    if (quizzes.length > 0) {
+      verificarTodos();
+    }
+  }, [quizzes]);
+
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -31,8 +60,13 @@ export default function QuizActivos() {
 
         const quizzes = await obtenerQuizzesActivosProgramados(cursoId, storedToken);
         setQuizzes(quizzes);
-      } catch (error) {
-        console.error('Error al obtener quizzes activos:', error);
+      } catch (error: any) {
+        if (error.response?.status === 404) {
+          // No hay quizzes activos programados
+          setQuizzes([]); // explícitamente vacío
+        } else {
+          console.error('Error al obtener quizzes activos:', error);
+        }
       }
     };
 
@@ -42,6 +76,10 @@ export default function QuizActivos() {
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Quizzes Activos</Text>
+      {quizzes.length === 0 && (
+        <Text style={styles.emptyText}>No hay quizzes activos por el momento 📭</Text>
+      )}
+
       <FlatList
         data={quizzes}
         keyExtractor={(item) => item.id}
@@ -53,24 +91,68 @@ export default function QuizActivos() {
               <Text style={styles.tema}>{item.tema}</Text>
             </Card.Content>
             <Card.Actions>
-              <Button
-                mode="contained"
-                onPress={() => {
-                  const fechaInicio = new Date(item.fecha_inicio);
-                  const ahora = new Date();
+              {quizzesRespondidos[item.id] ? (
+                <Button
+                  mode="outlined"
+                  onPress={async () => {
+                    const storedToken = await SecureStore.getItemAsync('token');
+                    const storedAlumnoId = await SecureStore.getItemAsync('alumnoId');
 
-                  if (ahora < fechaInicio) {
-                    alert("⏳ El quiz aún no está disponible. Intenta más tarde.");
-                    return;
-                  }
+                    if (!storedToken || !storedAlumnoId) {
+                      alert("Token o ID de alumno no disponibles");
+                      return;
+                    }
 
-                  router.push({ pathname: "./QuizPlayer", params: { quizId: item.id } });
-                }}
-                style={styles.button}
-                labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-              >
-                Resolver quiz
-              </Button>
+                    try {
+                      const preguntas = await obtenerPreguntasPorQuiz(item.id, storedToken);
+                      const respuestas = await obtenerRespuestasDeAlumno(item.id, storedAlumnoId, storedToken);
+
+                      router.push({
+                        pathname: "./CorreccionQuiz",
+                        params: {
+                          quizId: item.id,
+                          alumnoId: storedAlumnoId,
+                          token: storedToken,
+                          preguntas: JSON.stringify(preguntas),
+                          respuestasUsuario: JSON.stringify(respuestas.preguntas),
+                          puntuacion: respuestas.puntuacion?.toString(),
+                          total: respuestas.total?.toString()
+                        }
+                      });
+                    } catch (error) {
+                      console.error("❌ Error al obtener datos para corrección:", error);
+                      alert("No se pudo cargar la corrección");
+                    }
+                  }}
+                  style={{ borderColor: '#10b981' }}
+                  labelStyle={{ color: '#10b981' }}
+                >
+                  Ver corrección
+                </Button>
+              ) : (
+                <Button
+                  mode="contained"
+                  onPress={() => {
+                    const fechaInicio = new Date(item.fecha_inicio);
+                    const ahora = new Date();
+
+                    if (ahora < fechaInicio) {
+                      alert("⏳ El quiz aún no está disponible. Intenta más tarde.");
+                      return;
+                    }
+
+                    router.push({
+                      pathname: "./QuizPlayer",
+                      params: { quizId: item.id },
+                    });
+                  }}
+                  style={styles.button}
+                  labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+                >
+                  Resolver quiz
+                </Button>
+              )}
+
             </Card.Actions>
           </Card>
         )}
@@ -117,4 +199,10 @@ const styles = StyleSheet.create({
     backgroundColor: '#10b981',
     borderRadius: 30,
   },
+  emptyText: {
+    color: '#fff',
+    fontSize: 16,
+    textAlign: 'center',
+    marginTop: 30,
+  }
 });

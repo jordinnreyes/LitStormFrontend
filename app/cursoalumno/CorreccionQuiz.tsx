@@ -2,7 +2,7 @@ import { evaluarQuiz } from '@/apis/apiQuizz';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import { ScrollView, StyleSheet } from 'react-native';
-import { Card, Text } from 'react-native-paper';
+import { Button, Card, Text } from 'react-native-paper';
 
 interface Pregunta {
   id: string;
@@ -36,6 +36,9 @@ export default function CorreccionQuiz() {
   const quizIdStr = typeof params.quizId === 'string' ? params.quizId : '';
   const alumnoIdStr = typeof params.alumnoId === 'string' ? params.alumnoId : '';
   const tokenStr = typeof params.token === 'string' ? params.token : '';
+
+
+  const [mostrarFeedback, setMostrarFeedback] = useState(false);
 
   const correctas = params.puntuacion
     ? parseInt(params.puntuacion as string)
@@ -73,6 +76,45 @@ export default function CorreccionQuiz() {
     <ScrollView contentContainerStyle={styles.container}>
       <Text style={styles.resultado}>{`Obtuviste ${correctas}/${total}. respuestas correctas`}</Text>
 
+      <Button
+        mode="contained"
+        onPress={() => setMostrarFeedback(!mostrarFeedback)}
+        style={{ marginVertical: 20, backgroundColor: '#3b82f6' }}
+        labelStyle={{ color: '#fff' }}
+      >
+        {mostrarFeedback ? 'Ocultar feedback IA' : 'Ver feedback IA'}
+      </Button>
+      {mostrarFeedback && !resultado && (
+        <Text style={{ color: '#facc15', marginTop: 10, textAlign: 'center' }}>
+          🧠 Cargando feedback IA...
+        </Text>
+      )}
+
+      {mostrarFeedback && resultado &&
+        resultado.detalle.map((item: ResultadoPregunta, idx: number) => (
+          <Card key={`feedback-${idx}`} style={styles.card}>
+            <Card.Content>
+              <Text style={styles.preguntaTitulo}>{item.texto}</Text>
+              <Text style={styles.texto}>
+                Tu respuesta:{' '}
+                <Text style={item.correcta ? styles.correcta : styles.incorrecta}>
+                  {item.respuesta_usuario}
+                </Text>
+              </Text>
+              {!item.correcta && (
+                <Text style={styles.texto}>
+                  Respuesta correcta:{' '}
+                  <Text style={styles.correcta}>{item.respuesta_correcta}</Text>
+                </Text>
+              )}
+              <Text style={styles.explicacion}>Explicación: {item.explicacion}</Text>
+              {!item.correcta && item.feedback_ia && (
+                <Text style={styles.feedback}>Feedback IA: {item.feedback_ia}</Text>
+              )}
+            </Card.Content>
+          </Card>
+        ))}
+
       {preguntasArr.map((pregunta, idx) => {
         const esCorrecta = respuestasArr[idx]?.esCorrecta;
         const seleccionada = respuestasArr[idx]?.seleccionada;
@@ -98,34 +140,10 @@ export default function CorreccionQuiz() {
         );
       })}
 
-      {resultado &&
-        resultado.detalle.map((item: ResultadoPregunta, idx: number) => (
-          <Card key={idx} style={styles.card}>
-            <Card.Content>
-              <Text style={styles.preguntaTitulo}>{item.texto}</Text>
 
-              <Text style={styles.texto}>
-                Tu respuesta:{' '}
-                <Text style={item.correcta ? styles.correcta : styles.incorrecta}>
-                  {item.respuesta_usuario}
-                </Text>
-              </Text>
 
-              {!item.correcta && (
-                <Text style={styles.texto}>
-                  Respuesta correcta:{' '}
-                  <Text style={styles.correcta}>{item.respuesta_correcta}</Text>
-                </Text>
-              )}
 
-              <Text style={styles.explicacion}>Explicación: {item.explicacion}</Text>
 
-              {!item.correcta && item.feedback_ia && (
-                <Text style={styles.feedback}>Feedback IA: {item.feedback_ia}</Text>
-              )}
-            </Card.Content>
-          </Card>
-        ))}
     </ScrollView>
   );
 }
@@ -158,10 +176,10 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   preguntaSubtitulo: {
-  color: '#cbd5e1',
-  fontSize: 14,
-  marginBottom: 6,
-},
+    color: '#cbd5e1',
+    fontSize: 14,
+    marginBottom: 6,
+  },
   texto: {
     color: '#cbd5e1',
     fontSize: 14,

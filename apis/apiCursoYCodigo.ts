@@ -7,7 +7,7 @@ import axios from 'axios';
 //const API_URL = 'http://192.168.1.42:8001';
 
 
-const API_URL = 'http://18.217.235.159:8001';
+const API_URL = 'https://litstorm.duckdns.org/cursos';
 
 
 // añadido el 13/06/2025

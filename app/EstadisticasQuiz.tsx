@@ -1,12 +1,15 @@
 import { obtenerQuizzesPorCurso, QuizResumen } from '@/apis/apiQuizz';
-import { useRouter } from 'expo-router'; // 👈 import
+import { useLocalSearchParams, useRouter } from 'expo-router'; // 👈 import
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 
-export default function EstadisticasQuiz({ cursoId }: { cursoId: number }) {
+export default function EstadisticasQuiz() {
   const [quizzes, setQuizzes] = useState<QuizResumen[]>([]);
   const router = useRouter(); // 👈 hook de navegación
+
+    const { id } = useLocalSearchParams();
+  const cursoId = parseInt(id as string);
 
   useEffect(() => {
     const fetchQuizzes = async () => {
@@ -26,7 +29,8 @@ export default function EstadisticasQuiz({ cursoId }: { cursoId: number }) {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView   style={{ backgroundColor: '#1e3c72' }}
+  contentContainerStyle={{ ...styles.container, flexGrow: 1 }}>
       <Text style={styles.title}>Estadísticas de Quizzes</Text>
       {quizzes.map((quiz) => (
         <View key={quiz.id} style={styles.quizCard}>
@@ -41,7 +45,6 @@ export default function EstadisticasQuiz({ cursoId }: { cursoId: number }) {
 const styles = StyleSheet.create({
   container: {
     padding: 20,
-    backgroundColor: '#1e3c72',
   },
   title: {
     fontSize: 22,

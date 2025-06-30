@@ -44,17 +44,21 @@ export default function RegisterScreen() {
                 value: 'alumno',
                 label: 'Alumno',
                 style: {
-                  backgroundColor: '#10b981',
+                  backgroundColor: role === 'alumno' ? '#059669' : 'transparent',
+                  borderColor: '#059669',
+                  borderWidth: 1,
                 },
-                labelStyle: { color: '#fff', fontWeight: 'bold' },
+                labelStyle: { color: role === 'alumno' ? '#fff' : '#059669', fontWeight: 'bold' },
               },
               {
                 value: 'profesor',
                 label: 'Profesor',
                 style: {
-                  backgroundColor: '#3b82f6',
+                  backgroundColor: role === 'profesor' ? '#2563eb' : 'transparent',
+                  borderColor: '#2563eb',
+                  borderWidth: 1,
                 },
-                labelStyle: { color: '#fff', fontWeight: 'bold' },
+                labelStyle: { color: role === 'profesor' ? '#fff' : '#2563eb', fontWeight: 'bold' },
               },
             ]}
             style={styles.segmented}

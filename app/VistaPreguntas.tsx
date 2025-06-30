@@ -121,6 +121,7 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: '#1e3c72',
     minHeight: '100%',
+    paddingBottom: 120, 
   },
   title: {
     marginBottom: 26,

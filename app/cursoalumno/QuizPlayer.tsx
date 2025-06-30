@@ -26,6 +26,8 @@ export default function QuizPlayer() {
   const [token, setToken] = useState<string | null>(null);
   const [alumnoId, setAlumnoId] = useState<string | null>(null);
 
+  const [respondido, setRespondido] = useState(false);
+
   useEffect(() => {
     const checkSiYaRespondio = async () => {
       try {
@@ -40,6 +42,7 @@ export default function QuizPlayer() {
         const result = await verificarRespuesta(quizId as string, storedAlumnoId as string);
 
         if (result.respondido) {
+          setRespondido(true);
           const preguntas = await obtenerPreguntasPorQuiz(quizId as string, storedToken);
           const respuestas = await obtenerRespuestasDeAlumno(quizId as string, storedAlumnoId, storedToken);
 
@@ -65,6 +68,7 @@ export default function QuizPlayer() {
   }, [quizId]);
 
   useEffect(() => {
+    if (respondido) return; // evita doble carga
     const fetchPreguntas = async () => {
       try {
         const token = await SecureStore.getItemAsync('token');
@@ -84,7 +88,7 @@ export default function QuizPlayer() {
     };
 
     fetchPreguntas();
-  }, [quizId]);
+  }, [quizId, respondido]);
 
   const handleSeleccionarRespuesta = (indice: number) => {
     setRespuestaSeleccionada(indice);
@@ -135,6 +139,7 @@ export default function QuizPlayer() {
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.card}>
+        <Card.Title title={`Pregunta ${preguntaActual + 1}`} titleStyle={{ color: '#fff', fontWeight: 'bold' }} />
         <Card.Content>
           <Text style={styles.titulo}>{pregunta.texto}</Text>
         </Card.Content>
@@ -150,7 +155,6 @@ export default function QuizPlayer() {
               isSelected && styles.botonSeleccionado
             ]}
             onPress={() => handleSeleccionarRespuesta(i)}
-            disabled={respuestaSeleccionada !== null}
             activeOpacity={0.85}
           >
             <Text style={[

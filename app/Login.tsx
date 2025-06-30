@@ -45,7 +45,8 @@ export default function LoginScreen({ onAuthenticate }: Props) {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={Platform.OS === 'ios' ? 80 : 0}
     >
       <LinearGradient
         colors={['#1e3c72', '#2a5298']} // nuevo fondo azul profundo

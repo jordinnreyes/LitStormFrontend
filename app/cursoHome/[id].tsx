@@ -1,9 +1,10 @@
 import { getCursos } from '@/apis/apiCursoYCodigo';
-import { useLocalSearchParams, useNavigation } from 'expo-router';
+import { useLocalSearchParams, useNavigation, useRouter } from 'expo-router';
 import { useEffect, useLayoutEffect, useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import CrearQuiz from '../CrearQuizz'; // Asegúrate de tener este screen
-import EstadisticasQuiz from '../EstadisticasQuiz'; // Asegúrate de tener este screen
+import { StyleSheet, Text, View } from 'react-native';
+//import CrearQuiz from '../CrearQuizz';
+//import EstadisticasQuiz from '../EstadisticasQuiz';
+import { TouchableOpacity } from 'react-native';
 
 interface Curso {
   id: number;
@@ -18,10 +19,11 @@ export default function CursoHome() {
   const [curso, setCurso] = useState<Curso | null>(null);
 
     const navigation = useNavigation();
+      const router = useRouter();
 
   useLayoutEffect(() => {
     navigation.setOptions({
-      title: 'Curso', // por ejemplo agregar tu componente
+      title: 'Curso', 
     });
   }, [navigation]);
 
@@ -34,8 +36,36 @@ export default function CursoHome() {
     fetchCurso();
   }, []);       
 
-  if (!curso) return <Text>Cargando...</Text>;
+  if (!curso)   return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e3c72' }}>
+      <Text style={{ color: '#fff', fontSize: 18 }}>Cargando curso...</Text>
+    </View>
+  );
   return (
+
+
+
+      <View style={styles.container}>
+              <Text style={styles.title}>{curso.nombre}</Text>
+      <Text style={styles.subtitle}>Código de acceso: {curso.codigo_acceso}</Text>
+      <TouchableOpacity
+        style={styles.button}
+        onPress={() => router.push({ pathname: '/CrearQuizz', params: { id: curso.id } })}
+      >
+        <Text style={styles.buttonText}>➕ Crear Quiz</Text>
+      </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.button, { backgroundColor: '#3b82f6' }]}
+        onPress={() => router.push({ pathname: '/EstadisticasQuiz', params: { id: curso.id } })}
+      >
+        <Text style={styles.buttonText}>📊 Ver Estadísticas</Text>
+      </TouchableOpacity>
+
+      </View>
+
+
+/*
     <ScrollView contentContainerStyle={styles.container}>
     <View style={styles.container}>
       <Text style={styles.title}>{curso.nombre}</Text>
@@ -47,18 +77,48 @@ export default function CursoHome() {
       </View>
     </View>
 
-        <View style={{ marginTop: 40 }}>
-  <EstadisticasQuiz cursoId={curso.id} />
-</View>
-
+    <View style={{ marginTop: 40 }}>
+        <EstadisticasQuiz cursoId={curso.id} />
+    </View>
 
 
 </ScrollView>
+
+*/
   );
 }
 
 const styles = StyleSheet.create({
-  container: { paddingHorizontal: 0, paddingTop: 0, paddingBottom: 0 },
-  title: { fontSize: 24, fontWeight: 'bold' },
-  subtitle: { fontSize: 16, color: '#fff', marginLeft: 12, },
+  container: { 
+    flex: 1,
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#1e3c72',},
+  title: { 
+        fontSize: 24,
+    fontWeight: 'bold',
+    color: '#FFDC64',
+    marginBottom: 10,
+    textAlign: 'center', },
+  subtitle: {     fontSize: 16,
+    color: '#fff',
+    textAlign: 'center',
+    marginBottom: 30,},
+
+    button: {
+    backgroundColor: '#10b981',
+    paddingVertical: 12,
+    paddingHorizontal: 24,
+    borderRadius: 30,
+    marginBottom: 20,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  buttonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
 });
