@@ -107,6 +107,19 @@ export default function AlumnoHome() {
           Inscribirse
         </Button>
 
+ <Button
+  mode="contained"
+  icon="robot"
+  onPress={() => router.push('/AlumnoChatbot')}
+  style={[styles.button, { backgroundColor: '#facc15' }]}  // Amarillo brillante
+  labelStyle={{ color: '#1f2937', fontWeight: 'bold' }}
+  contentStyle={{ paddingVertical: 10 }}
+>
+  Ir al Asistente de Comunicación
+</Button>
+
+
+
         {mensaje ? <Text style={styles.message}>{mensaje}</Text> : null}
 
         <Text variant="titleMedium" style={styles.subtitle}>Mis cursos:</Text>
@@ -163,7 +176,7 @@ const styles = StyleSheet.create({
   button: {
     backgroundColor: '#10b981',
     borderRadius: 30,
-    marginTop: 10,
+    marginTop: 20,
   },
   message: {
     color: '#f3f4f6',

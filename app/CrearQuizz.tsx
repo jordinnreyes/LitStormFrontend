@@ -4,7 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import * as SecureStore from 'expo-secure-store';
 import React, { useEffect, useState } from 'react';
 import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import { Button, Text, TextInput } from 'react-native-paper';
+import { Button, Dialog, IconButton, Portal, Text, TextInput } from 'react-native-paper';
 
 const now = new Date();
 const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -37,6 +37,10 @@ export default function CrearQuizz() {
   const abrirMenu = () => setMenuVisible(true);
   const cerrarMenu = () => setMenuVisible(false);
   const [mostrarTemas, setMostrarTemas] = useState(false);
+
+
+  const [mostrarInfo, setMostrarInfo] = useState(false);
+
 
   
 
@@ -129,6 +133,9 @@ export default function CrearQuizz() {
           titulo: titulo,
           tema: tema,
           cursoId: cursoId!,
+          fechaInicio,
+          fechaFin,
+          cantidad,
         },
       });
     } catch (error: any) {
@@ -193,7 +200,19 @@ export default function CrearQuizz() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text variant="titleLarge" style={styles.title}>Crear Nuevo Quiz</Text>
+      <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center' }}>
+  <Text variant="titleLarge" style={styles.title}>Crear Nuevo Quiz</Text>
+  <IconButton
+    icon="information"
+    size={28}
+    onPress={() => setMostrarInfo(true)}
+    accessibilityLabel="Cómo crear un quiz"
+    iconColor="#F5B800"
+    style={styles.infoIcon}
+  />
+</View>
+
+
       
       {/* Sección de información básica */}
       <Text variant="titleMedium" style={styles.sectionTitle}>Información del Quiz</Text>
@@ -203,7 +222,7 @@ export default function CrearQuizz() {
         onChangeText={setTitulo} 
         style={styles.input} 
         mode="outlined"
-        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
+        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc',onSurface: '#ccc', } }}
       />
       
       <TextInput
@@ -212,7 +231,7 @@ export default function CrearQuizz() {
           onChangeText={setTema}
           style={styles.input}
           mode="outlined"
-          theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
+          theme={{ colors: { text: '#ffffff', primary: '#3b82f6', placeholder: '#ccc',onSurface: '#ccc', } }}
           right={
             <TextInput.Icon
               icon="menu-down"
@@ -229,7 +248,9 @@ export default function CrearQuizz() {
               setTema(t);
               setMostrarTemas(false);
             }}
-            style={{ alignSelf: 'flex-start', marginBottom: 4 }}
+              style={styles.temaButton}
+  labelStyle={styles.temaButtonLabel}
+            buttonColor="#1f2937"
           >
             {t}
           </Button>
@@ -243,8 +264,48 @@ export default function CrearQuizz() {
         keyboardType="numeric" 
         style={styles.input}
         mode="outlined"
-        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc' } }}
+        theme={{ colors: { text: '#fff', primary: '#3b82f6', placeholder: '#ccc', onSurface: '#ccc', } }}
       />
+
+      
+      {/* Sección de acciones */}
+      <View style={styles.actionsContainer}>
+        <Button 
+          mode="outlined" 
+          onPress={handleGenerarPreguntas} 
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+          style={[styles.button, {marginBottom: 8}]}
+          icon="robot"
+        >
+          Generar preguntas con IA
+        </Button>
+
+        <Button
+          mode="outlined"
+          onPress={() => {
+            if (!tema) {
+              setMensaje('Selecciona o escribe un tema antes de seleccionar preguntas');
+              return;
+            }
+            router.push({
+              pathname: '/SeleccionarPreguntas',
+              params: {
+                tema,
+                cursoId: cursoId!.toString(),
+                titulo,
+                cantidad,
+              },
+            });
+          }}
+          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
+          style={[styles.button, {marginBottom: 16}]}
+          icon="playlist-plus"
+        >
+          Seleccionar preguntas
+        </Button>
+
+
+
       
       {/* Sección de fechas */}
       <Text variant="titleMedium" style={[styles.sectionTitle, {marginTop: 16}]}>Fechas del Quiz</Text>
@@ -297,42 +358,6 @@ export default function CrearQuizz() {
           }}
         />
       )}
-      
-      {/* Sección de acciones */}
-      <View style={styles.actionsContainer}>
-        <Button 
-          mode="outlined" 
-          onPress={handleGenerarPreguntas} 
-          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-          style={[styles.button, {marginBottom: 8}]}
-          icon="robot"
-        >
-          Generar preguntas con IA
-        </Button>
-
-        <Button
-          mode="outlined"
-          onPress={() => {
-            if (!tema) {
-              setMensaje('Selecciona o escribe un tema antes de seleccionar preguntas');
-              return;
-            }
-            router.push({
-              pathname: '/SeleccionarPreguntas',
-              params: {
-                tema,
-                cursoId: cursoId!.toString(),
-                titulo,
-                cantidad,
-              },
-            });
-          }}
-          labelStyle={{ color: '#fff', fontWeight: 'bold' }}
-          style={[styles.button, {marginBottom: 16}]}
-          icon="playlist-plus"
-        >
-          Seleccionar preguntas
-        </Button>
         
         <Button 
           mode="contained" 
@@ -359,6 +384,25 @@ export default function CrearQuizz() {
           ))}
         </View>
       )}
+
+
+<Portal>
+  <Dialog visible={mostrarInfo} onDismiss={() => setMostrarInfo(false)} style={{ backgroundColor: '#1f2937' }}>
+    <Dialog.Title style={{ color: '#F5B800' }}>¿Cómo crear un quiz?</Dialog.Title>
+    <Dialog.Content>
+      <Text style={styles.infoText}>1. Escribe un título y un tema.</Text>
+      <Text style={styles.infoText}>2. Selecciona la cantidad de preguntas.</Text>
+      <Text style={styles.infoText}>3. Genera preguntas con IA y luego selecciónalas manualmente.</Text>
+      <Text style={styles.infoText}>4. Define la fecha de inicio y fin.</Text>
+      <Text style={styles.infoText}>5. Presiona "Crear Quiz" para guardarlo.</Text>
+    </Dialog.Content>
+    <Dialog.Actions>
+      <Button onPress={() => setMostrarInfo(false)}>Cerrar</Button>
+    </Dialog.Actions>
+  </Dialog>
+</Portal>
+
+
     </ScrollView>
   );
 }
@@ -428,4 +472,27 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     color: 'white',
   },
+  infoText: {
+  color: '#F5B800',
+  fontSize: 14,
+  marginBottom: 6,
+},
+temaButton: {
+  alignSelf: 'flex-start',
+  marginBottom: 4,
+  borderRadius: 12,
+  borderColor: '#3b82f6',
+  borderWidth: 1,
+  backgroundColor: '#1f2937',
+},
+
+temaButtonLabel: {
+  color: '#f3f4f6',
+  fontWeight: '500',
+},
+infoIcon: {
+  marginTop: -15,  // ajusta si aún se ve ligeramente desfasado
+  marginLeft: 19,
+  marginRight: -19, // opcional, para que no desplace el texto
+},
 });

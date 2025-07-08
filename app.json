@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "LitStormFrontend",
+    "name": "LitStorm",
     "slug": "LitStormFrontend",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -15,10 +15,10 @@
       "package": "com.jordinn.litstorm",
       "usesCleartextTraffic": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
+        "foregroundImage": "./assets/images/icon.png"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "windowSoftInputMode": "adjustResize"
     },
     "web": {
       "bundler": "metro",

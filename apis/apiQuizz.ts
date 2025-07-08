@@ -252,3 +252,25 @@ export const obtenerEstadisticasDelQuiz = async (
   );
   return response.data;
 };
+
+
+
+export interface ChatMessage {
+  role: 'user' | 'assistant' | 'system';
+  content: string;
+}
+
+export interface ChatResponse {
+  role: 'assistant';
+  content: string;
+}
+
+export const enviarMensajeAlChatBot = async (
+  mensajes: ChatMessage[]
+): Promise<ChatResponse> => {
+  const response = await axios.post<ChatResponse>(
+    `${API_URL}/chatbot/chat`,
+    mensajes
+  );
+  return response.data;
+};

@@ -53,7 +53,7 @@ export default function LoginScreen({ onAuthenticate }: Props) {
         style={{ flex: 1 }}
       >
         <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
-          <Text variant="displayMedium" style={styles.title}>LitStorm</Text>
+          <Text variant="displayMedium" style={styles.title}>Iniciar Sesión</Text>
 
           <TextInput
             label="Email"
